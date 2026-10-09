@@ -10,7 +10,10 @@
   <div class="app-container">
     <!-- Header Controls -->
     <header class="app-header">
-      <div id="timer" class="timer-display">00:00</div>
+      <div class="timer-box">
+        <div id="timer" class="timer-display">00:00</div>
+        <button id="btn-pause" class="btn btn-icon" title="Pause Game">⏸</button>
+      </div>
       <div class="header-controls">
         <select id="difficulty-select" class="select-input">
           <option value="42">Easy</option>
@@ -29,6 +32,14 @@
       <div id="sudoku-container" class="sudoku-container">
         <svg id="svg-overlay" class="svg-overlay" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
         <div id="sudoku-board" class="sudoku-board"></div>
+        
+        <!-- Pause Screen Overlay -->
+        <div id="pause-overlay" class="pause-overlay hidden">
+          <div class="pause-card">
+            <span>GAME PAUSED</span>
+            <button id="btn-resume" class="btn btn-primary">Resume ▶</button>
+          </div>
+        </div>
       </div>
 
       <!-- Mode Selector Toolbar -->

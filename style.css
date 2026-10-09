@@ -82,8 +82,14 @@ body {
   align-items: center;
 }
 
+.timer-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .timer-display {
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   font-weight: 700;
   color: var(--accent);
   font-variant-numeric: tabular-nums;
@@ -118,7 +124,7 @@ body {
 }
 
 .btn-icon {
-  font-size: 1rem;
+  font-size: 0.95rem;
   padding: 6px 8px;
 }
 
@@ -169,6 +175,36 @@ body.light-mode .btn-primary {
   height: 100%;
   position: relative;
   z-index: 2;
+}
+
+/* Pause Overlay Screen */
+.pause-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 50;
+}
+
+body.light-mode .pause-overlay {
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.pause-overlay.hidden { display: none; }
+
+.pause-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--accent);
+  letter-spacing: 1px;
 }
 
 /* Base Cell */
@@ -319,12 +355,13 @@ body.light-mode .mode-btn.active {
 
 .btn-erase-slot { color: var(--error-color); }
 
-/* Settings Modal Backdrop & Dialog */
+/* Settings Modal Backdrop & Dialog with Stronger Blur */
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(3px);
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   display: flex;
   justify-content: center;
   align-items: center;

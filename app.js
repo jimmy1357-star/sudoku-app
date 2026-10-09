@@ -25,9 +25,15 @@ let activeColor = 'c-blue';
 // Timer State
 let timerInterval = null;
 let secondsElapsed = 0;
+let isPaused = false;
+let pausedBySettings = false;
 
 // DOM Elements
 const timerEl = document.getElementById('timer');
+const pauseBtn = document.getElementById('btn-pause');
+const pauseOverlayEl = document.getElementById('pause-overlay');
+const resumeBtn = document.getElementById('btn-resume');
+
 const boardEl = document.getElementById('sudoku-board');
 const numpadEl = document.getElementById('numpad');
 const eraseBtn = document.getElementById('btn-erase');
@@ -60,21 +66,21 @@ toggleDarkMode.addEventListener('change', (e) => {
   localStorage.setItem('sudoku-theme', isDark ? 'dark' : 'light');
 });
 
-// Settings Modal Handlers
-settingsBtn.addEventListener('click', () => settingsModal.classList.remove('hidden'));
-closeSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
-settingsModal.addEventListener('click', (e) => {
-  if (e.target === settingsModal) settingsModal.classList.add('hidden');
-});
-
 // --- TIMER ENGINE ---
 function startTimer() {
   clearInterval(timerInterval);
   secondsElapsed = 0;
+  isPaused = false;
+  pausedBySettings = false;
+  pauseOverlayEl.classList.add('hidden');
+  pauseBtn.textContent = '⏸';
   updateTimerDisplay();
+
   timerInterval = setInterval(() => {
-    secondsElapsed++;
-    updateTimerDisplay();
+    if (!isPaused) {
+      secondsElapsed++;
+      updateTimerDisplay();
+    }
   }, 1000);
 }
 
@@ -85,6 +91,54 @@ function updateTimerDisplay() {
   const formattedSecs = String(secs).padStart(2, '0');
   timerEl.textContent = `${formattedMins}:${formattedSecs}`;
 }
+
+function pauseGame() {
+  if (isPaused && !pausedBySettings) return;
+  isPaused = true;
+  pauseOverlayEl.classList.remove('hidden');
+  pauseBtn.textContent = '▶';
+}
+
+function resumeGame() {
+  isPaused = false;
+  pausedBySettings = false;
+  pauseOverlayEl.classList.add('hidden');
+  pauseBtn.textContent = '⏸';
+}
+
+function togglePause() {
+  if (isPaused) {
+    resumeGame();
+  } else {
+    pauseGame();
+  }
+}
+
+// Settings Modal Handlers with Auto-Pause
+function openSettings() {
+  if (!isPaused) {
+    isPaused = true;
+    pausedBySettings = true;
+  }
+  settingsModal.classList.remove('hidden');
+}
+
+function closeSettings() {
+  settingsModal.classList.add('hidden');
+  if (pausedBySettings) {
+    pausedBySettings = false;
+    isPaused = false;
+  }
+}
+
+settingsBtn.addEventListener('click', openSettings);
+closeSettingsBtn.addEventListener('click', closeSettings);
+settingsModal.addEventListener('click', (e) => {
+  if (e.target === settingsModal) closeSettings();
+});
+
+pauseBtn.addEventListener('click', togglePause);
+resumeBtn.addEventListener('click', resumeGame);
 
 // --- PERMUTATION ENGINE ---
 function generateNewPuzzle() {
@@ -169,7 +223,7 @@ function renderBoard() {
         cell.appendChild(pencilGrid);
       }
 
-      // Highlights logic with softer overlay styling
+      // Highlights logic
       if (selectedIdx !== null) {
         if (idx === selectedIdx) {
           cell.classList.add('selected');
@@ -188,6 +242,8 @@ function renderBoard() {
 
       cell.addEventListener('click', (e) => {
         e.stopPropagation();
+        if (isPaused) return; // Prevent input while paused
+
         if (selectedIdx === idx && currentMode !== 'color') {
           selectedIdx = null;
         } else {
@@ -216,7 +272,7 @@ function renderBoard() {
 
 // --- USER INPUT HANDLERS ---
 function enterDigit(digit) {
-  if (selectedIdx === null) return;
+  if (selectedIdx === null || isPaused) return;
   const r = Math.floor(selectedIdx / 9);
   const c = selectedIdx % 9;
 
@@ -256,7 +312,7 @@ function enterDigit(digit) {
 
 // --- UNDO ENGINE ---
 function undo() {
-  if (moveHistory.length === 0) return;
+  if (moveHistory.length === 0 || isPaused) return;
 
   const lastMove = moveHistory.pop();
   const { r, c } = lastMove;
@@ -325,7 +381,11 @@ difficultySelect.addEventListener('change', initGame);
 
 window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
-    settingsModal.classList.add('hidden');
+    if (!settingsModal.classList.contains('hidden')) {
+      closeSettings();
+    } else if (isPaused) {
+      resumeGame();
+    }
     return;
   }
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
