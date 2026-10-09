@@ -334,7 +334,7 @@ body.light-mode .mode-btn.active {
 .color-swatch.c-pink { background: #fbcfe8; }
 .color-swatch.c-clear { background: var(--border-subtle); color: var(--text-main); font-weight: bold; }
 
-/* Numpad Grid */
+/* Numpad Grid & Remaining Counter Badges */
 .numpad {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -342,6 +342,7 @@ body.light-mode .mode-btn.active {
 }
 
 .num-btn {
+  position: relative;
   background: var(--card-bg);
   color: var(--text-main);
   border: 1px solid var(--border-subtle);
@@ -351,11 +352,26 @@ body.light-mode .mode-btn.active {
   padding: 12px 0;
   cursor: pointer;
   text-align: center;
+  transition: opacity 0.2s ease, transform 0.1s ease;
+}
+
+.num-btn.completed {
+  opacity: 0.3;
+}
+
+.digit-count {
+  position: absolute;
+  top: 3px;
+  right: 5px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--accent);
+  pointer-events: none;
 }
 
 .btn-erase-slot { color: var(--error-color); }
 
-/* Settings Modal Backdrop & Dialog with Stronger Blur */
+/* Settings Modal Backdrop & Dialog */
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -376,7 +392,7 @@ body.light-mode .mode-btn.active {
   border: 1px solid var(--border-subtle);
   border-radius: 12px;
   width: 100%;
-  max-width: 300px;
+  max-width: 320px;
   padding: 16px;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
 }
@@ -416,7 +432,7 @@ body.light-mode .mode-btn.active {
 }
 
 .setting-label {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: var(--text-main);
 }

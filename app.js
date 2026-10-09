@@ -22,6 +22,11 @@ let selectedIdx = null;
 let currentMode = 'digit'; // 'digit', 'pencil', 'color'
 let activeColor = 'c-blue';
 
+// Settings State
+let settingsAutoErase = true;
+let settingsShowCounts = true;
+let settingsHighlightErrors = true;
+
 // Timer State
 let timerInterval = null;
 let secondsElapsed = 0;
@@ -51,19 +56,71 @@ const settingsBtn = document.getElementById('btn-settings');
 const settingsModal = document.getElementById('settings-modal');
 const closeSettingsBtn = document.getElementById('btn-close-settings');
 const toggleDarkMode = document.getElementById('toggle-dark-mode');
+const toggleAutoErase = document.getElementById('toggle-auto-erase');
+const toggleDigitCounts = document.getElementById('toggle-digit-counts');
+const toggleHighlightErrors = document.getElementById('toggle-highlight-errors');
 
-// --- THEME ENGINE ---
-function initTheme() {
+// --- SETTINGS ENGINE ---
+function initSettings() {
   const savedTheme = localStorage.getItem('sudoku-theme');
   const isDark = savedTheme !== 'light';
   document.body.classList.toggle('light-mode', !isDark);
   toggleDarkMode.checked = isDark;
+
+  settingsAutoErase = localStorage.getItem('sudoku-auto-erase') !== 'false';
+  toggleAutoErase.checked = settingsAutoErase;
+
+  settingsShowCounts = localStorage.getItem('sudoku-show-counts') !== 'false';
+  toggleDigitCounts.checked = settingsShowCounts;
+
+  settingsHighlightErrors = localStorage.getItem('sudoku-highlight-errors') !== 'false';
+  toggleHighlightErrors.checked = settingsHighlightErrors;
 }
 
 toggleDarkMode.addEventListener('change', (e) => {
   const isDark = e.target.checked;
   document.body.classList.toggle('light-mode', !isDark);
   localStorage.setItem('sudoku-theme', isDark ? 'dark' : 'light');
+});
+
+toggleAutoErase.addEventListener('change', (e) => {
+  settingsAutoErase = e.target.checked;
+  localStorage.setItem('sudoku-auto-erase', settingsAutoErase);
+});
+
+toggleDigitCounts.addEventListener('change', (e) => {
+  settingsShowCounts = e.target.checked;
+  localStorage.setItem('sudoku-show-counts', settingsShowCounts);
+  updateDigitCounts();
+});
+
+toggleHighlightErrors.addEventListener('change', (e) => {
+  settingsHighlightErrors = e.target.checked;
+  localStorage.setItem('sudoku-highlight-errors', settingsHighlightErrors);
+  renderBoard();
+});
+
+// Settings Modal Handlers with Auto-Pause
+function openSettings() {
+  if (!isPaused) {
+    isPaused = true;
+    pausedBySettings = true;
+  }
+  settingsModal.classList.remove('hidden');
+}
+
+function closeSettings() {
+  settingsModal.classList.add('hidden');
+  if (pausedBySettings) {
+    pausedBySettings = false;
+    isPaused = false;
+  }
+}
+
+settingsBtn.addEventListener('click', openSettings);
+closeSettingsBtn.addEventListener('click', closeSettings);
+settingsModal.addEventListener('click', (e) => {
+  if (e.target === settingsModal) closeSettings();
 });
 
 // --- TIMER ENGINE ---
@@ -114,29 +171,6 @@ function togglePause() {
   }
 }
 
-// Settings Modal Handlers with Auto-Pause
-function openSettings() {
-  if (!isPaused) {
-    isPaused = true;
-    pausedBySettings = true;
-  }
-  settingsModal.classList.remove('hidden');
-}
-
-function closeSettings() {
-  settingsModal.classList.add('hidden');
-  if (pausedBySettings) {
-    pausedBySettings = false;
-    isPaused = false;
-  }
-}
-
-settingsBtn.addEventListener('click', openSettings);
-closeSettingsBtn.addEventListener('click', closeSettings);
-settingsModal.addEventListener('click', (e) => {
-  if (e.target === settingsModal) closeSettings();
-});
-
 pauseBtn.addEventListener('click', togglePause);
 resumeBtn.addEventListener('click', resumeGame);
 
@@ -177,6 +211,34 @@ function generateNewPuzzle() {
   }
 }
 
+// --- REMAINING DIGIT COUNTER ENGINE ---
+function updateDigitCounts() {
+  const counts = Array(10).fill(0);
+  for (let r = 0; r < 9; r++) {
+    for (let c = 0; c < 9; c++) {
+      const val = boardState[r][c];
+      if (val >= 1 && val <= 9) {
+        counts[val]++;
+      }
+    }
+  }
+
+  document.querySelectorAll('.num-btn[data-value]').forEach(btn => {
+    const digit = parseInt(btn.dataset.value, 10);
+    if (digit === 0) return;
+
+    const remaining = 9 - counts[digit];
+    const countSpan = btn.querySelector('.digit-count');
+
+    if (countSpan) {
+      countSpan.textContent = remaining > 0 ? remaining : '';
+      countSpan.style.display = settingsShowCounts && remaining > 0 ? 'inline' : 'none';
+    }
+
+    btn.classList.toggle('completed', remaining <= 0);
+  });
+}
+
 // --- RENDER ENGINE ---
 function renderBoard() {
   boardEl.innerHTML = '';
@@ -205,7 +267,7 @@ function renderBoard() {
           cell.classList.add('given');
         } else {
           cell.classList.add('user-entry');
-          if (val !== solutionMatrix[r][c]) {
+          if (settingsHighlightErrors && val !== solutionMatrix[r][c]) {
             cell.classList.add('error');
           }
         }
@@ -242,7 +304,7 @@ function renderBoard() {
 
       cell.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (isPaused) return; // Prevent input while paused
+        if (isPaused) return;
 
         if (selectedIdx === idx && currentMode !== 'color') {
           selectedIdx = null;
@@ -268,6 +330,8 @@ function renderBoard() {
       boardEl.appendChild(cell);
     }
   }
+
+  updateDigitCounts();
 }
 
 // --- USER INPUT HANDLERS ---
@@ -280,11 +344,43 @@ function enterDigit(digit) {
 
   const prevVal = boardState[r][c];
   const prevNotes = new Set(notesState[r][c]);
+  const autoErasedNotes = [];
 
   if (currentMode === 'digit') {
     if (prevVal === digit) return;
     boardState[r][c] = digit;
     notesState[r][c].clear();
+
+    // Auto-Erase Pencil Notes in same Row, Column, and 3x3 Box
+    if (settingsAutoErase && digit !== 0) {
+      const boxStartRow = Math.floor(r / 3) * 3;
+      const boxStartCol = Math.floor(c / 3) * 3;
+
+      for (let i = 0; i < 9; i++) {
+        // Same row
+        if (notesState[r][i].has(digit)) {
+          notesState[r][i].delete(digit);
+          autoErasedNotes.push({ r, c: i, digit });
+        }
+        // Same column
+        if (notesState[i][c].has(digit)) {
+          notesState[i][c].delete(digit);
+          autoErasedNotes.push({ r: i, c, digit });
+        }
+      }
+      // Same 3x3 box
+      for (let br = 0; br < 3; br++) {
+        for (let bc = 0; bc < 3; bc++) {
+          const row = boxStartRow + br;
+          const col = boxStartCol + bc;
+          if (notesState[row][col].has(digit)) {
+            notesState[row][col].delete(digit);
+            autoErasedNotes.push({ r: row, c: col, digit });
+          }
+        }
+      }
+    }
+
   } else if (currentMode === 'pencil' && digit !== 0) {
     boardState[r][c] = 0;
     if (notesState[r][c].has(digit)) {
@@ -304,7 +400,8 @@ function enterDigit(digit) {
     prevVal,
     newVal: boardState[r][c],
     prevNotes,
-    newNotes: new Set(notesState[r][c])
+    newNotes: new Set(notesState[r][c]),
+    autoErasedNotes
   });
 
   renderBoard();
@@ -315,16 +412,25 @@ function undo() {
   if (moveHistory.length === 0 || isPaused) return;
 
   const lastMove = moveHistory.pop();
-  const { r, c } = lastMove;
 
   if (lastMove.type === 'cell') {
+    const { r, c } = lastMove;
     boardState[r][c] = lastMove.prevVal;
     notesState[r][c] = new Set(lastMove.prevNotes);
+
+    // Restore any auto-erased pencil notes!
+    if (lastMove.autoErasedNotes && lastMove.autoErasedNotes.length > 0) {
+      lastMove.autoErasedNotes.forEach(item => {
+        notesState[item.r][item.c].add(item.digit);
+      });
+    }
+    selectedIdx = r * 9 + c;
   } else if (lastMove.type === 'color') {
+    const { r, c } = lastMove;
     colorsState[r][c] = lastMove.prevColor;
+    selectedIdx = r * 9 + c;
   }
 
-  selectedIdx = r * 9 + c;
   renderBoard();
 }
 
@@ -397,5 +503,5 @@ window.addEventListener('keydown', (e) => {
   if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') enterDigit(0);
 });
 
-initTheme();
+initSettings();
 initGame();
