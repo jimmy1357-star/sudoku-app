@@ -59,25 +59,28 @@ body {
 
 .header-controls {
   display: flex;
-  gap: 8px;
+  gap: 6px;
+  align-items: center;
 }
 
 .select-input {
   background: var(--card-bg);
   color: var(--text-main);
   border: 1px solid var(--border-subtle);
-  padding: 6px 10px;
+  padding: 6px 8px;
   border-radius: 8px;
   font-weight: 600;
+  font-size: 0.85rem;
 }
 
 .btn {
   background: var(--card-bg);
   color: var(--text-main);
   border: 1px solid var(--border-subtle);
-  padding: 8px 14px;
+  padding: 6px 12px;
   border-radius: 8px;
   font-weight: 600;
+  font-size: 0.85rem;
   cursor: pointer;
 }
 

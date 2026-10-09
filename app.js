@@ -16,6 +16,7 @@ let boardState = [];
 let givensMask = [];
 let notesState = [];
 let colorsState = [];
+let moveHistory = [];
 
 let selectedIdx = null;
 let currentMode = 'digit'; // 'digit', 'pencil', 'color'
@@ -25,6 +26,7 @@ let activeColor = 'c-blue';
 const boardEl = document.getElementById('sudoku-board');
 const numpadEl = document.getElementById('numpad');
 const eraseBtn = document.getElementById('btn-erase');
+const undoBtn = document.getElementById('btn-undo');
 const newGameBtn = document.getElementById('btn-new-game');
 const difficultySelect = document.getElementById('difficulty-select');
 
@@ -56,6 +58,7 @@ function generateNewPuzzle() {
   boardState = Array.from({ length: 9 }, () => Array(9).fill(0));
   notesState = Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => new Set()));
   colorsState = Array.from({ length: 9 }, () => Array(9).fill(null));
+  moveHistory = [];
 
   let placedClues = 0;
   while (placedClues < cluesCount) {
@@ -85,7 +88,6 @@ function renderBoard() {
       cell.dataset.row = r;
       cell.dataset.col = c;
 
-      // Apply Custom Marking Color
       if (colorsState[r][c]) {
         cell.classList.add(colorsState[r][c]);
       }
@@ -103,7 +105,6 @@ function renderBoard() {
           }
         }
       } else if (notesState[r][c].size > 0) {
-        // Render 3x3 Pencil Notes Grid
         const pencilGrid = document.createElement('div');
         pencilGrid.className = 'pencil-grid';
         for (let d = 1; d <= 9; d++) {
@@ -117,12 +118,10 @@ function renderBoard() {
         cell.appendChild(pencilGrid);
       }
 
-      // Highlights logic
       if (selectedIdx !== null) {
         if (idx === selectedIdx) {
           cell.classList.add('selected');
         } else if (selectedVal !== 0) {
-          // Crosshairs & matching digits ONLY highlight when a cell WITH a number is selected
           if (val === selectedVal) {
             cell.classList.add('same-number');
           } else if (
@@ -135,16 +134,24 @@ function renderBoard() {
         }
       }
 
-      // Cell click handler
       cell.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (selectedIdx === idx) {
-          // Re-clicking selected cell deselects it
+        if (selectedIdx === idx && currentMode !== 'color') {
           selectedIdx = null;
         } else {
           selectedIdx = idx;
           if (currentMode === 'color') {
-            colorsState[r][c] = activeColor === 'clear' ? null : activeColor;
+            const newColor = activeColor === 'clear' ? null : activeColor;
+            const prevColor = colorsState[r][c];
+            if (prevColor !== newColor) {
+              moveHistory.push({
+                type: 'color',
+                r, c,
+                prevColor,
+                newColor
+              });
+              colorsState[r][c] = newColor;
+            }
           }
         }
         renderBoard();
@@ -163,7 +170,11 @@ function enterDigit(digit) {
 
   if (givensMask[r][c]) return;
 
+  const prevVal = boardState[r][c];
+  const prevNotes = new Set(notesState[r][c]);
+
   if (currentMode === 'digit') {
+    if (prevVal === digit) return; // No change
     boardState[r][c] = digit;
     notesState[r][c].clear();
   } else if (currentMode === 'pencil' && digit !== 0) {
@@ -174,10 +185,38 @@ function enterDigit(digit) {
       notesState[r][c].add(digit);
     }
   } else if (digit === 0) {
+    if (prevVal === 0 && prevNotes.size === 0) return; // Nothing to erase
     boardState[r][c] = 0;
     notesState[r][c].clear();
   }
 
+  moveHistory.push({
+    type: 'cell',
+    r, c,
+    prevVal,
+    newVal: boardState[r][c],
+    prevNotes,
+    newNotes: new Set(notesState[r][c])
+  });
+
+  renderBoard();
+}
+
+// --- UNDO ENGINE ---
+function undo() {
+  if (moveHistory.length === 0) return;
+
+  const lastMove = moveHistory.pop();
+  const { r, c } = lastMove;
+
+  if (lastMove.type === 'cell') {
+    boardState[r][c] = lastMove.prevVal;
+    notesState[r][c] = new Set(lastMove.prevNotes);
+  } else if (lastMove.type === 'color') {
+    colorsState[r][c] = lastMove.prevColor;
+  }
+
+  selectedIdx = r * 9 + c;
   renderBoard();
 }
 
@@ -227,10 +266,16 @@ numpadEl.addEventListener('click', (e) => {
 });
 
 eraseBtn.addEventListener('click', () => enterDigit(0));
+undoBtn.addEventListener('click', undo);
 newGameBtn.addEventListener('click', initGame);
 difficultySelect.addEventListener('change', initGame);
 
 window.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+    e.preventDefault();
+    undo();
+    return;
+  }
   if (e.key >= '1' && e.key <= '9') enterDigit(parseInt(e.key, 10));
   if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') enterDigit(0);
 });
