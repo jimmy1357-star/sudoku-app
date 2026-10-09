@@ -1,17 +1,5 @@
-// Base seed puzzle and corresponding solution
-const SEED_PUZZLE = [
-  [5, 3, 0, 0, 7, 0, 0, 0, 0],
-  [6, 0, 0, 1, 9, 5, 0, 0, 0],
-  [0, 9, 8, 0, 0, 0, 0, 6, 0],
-  [8, 0, 0, 0, 6, 0, 0, 0, 3],
-  [4, 0, 0, 8, 0, 3, 0, 0, 1],
-  [7, 0, 0, 0, 2, 0, 0, 0, 6],
-  [0, 6, 0, 0, 0, 0, 2, 8, 0],
-  [0, 0, 0, 4, 1, 9, 0, 0, 5],
-  [0, 0, 0, 0, 8, 0, 0, 7, 9]
-];
-
-const SEED_SOLUTION = [
+// Master base seed solution matrix
+const BASE_SOLUTION = [
   [5, 3, 4, 6, 7, 8, 9, 1, 2],
   [6, 7, 2, 1, 9, 5, 3, 4, 8],
   [1, 9, 8, 3, 4, 2, 5, 6, 7],
@@ -24,6 +12,7 @@ const SEED_SOLUTION = [
 ];
 
 // Game State
+let solutionMatrix = [];
 let boardState = [];
 let givensMask = [];
 let selectedIdx = null;
@@ -34,16 +23,43 @@ const numpadEl = document.getElementById('numpad');
 const eraseBtn = document.getElementById('btn-erase');
 const newGameBtn = document.getElementById('btn-new-game');
 
-// Initialize Game State
-function initGame() {
-  // Deep copy seed arrays
-  boardState = SEED_PUZZLE.map(row => [...row]);
-  givensMask = SEED_PUZZLE.map(row => row.map(val => val !== 0));
-  selectedIdx = null;
-  renderBoard();
+// --- PERMUTATION ENGINE ---
+function generateNewPuzzle(cluesCount = 36) {
+  // 1. Random digit mapping ([1..9] -> shuffled [1..9])
+  const digitMap = [1, 2, 3, 4, 5, 6, 7, 8, 9].sort(() => Math.random() - 0.5);
+  let permuted = BASE_SOLUTION.map(row => row.map(val => digitMap[val - 1]));
+
+  // 2. Shuffle rows within each 3x3 band
+  for (let band = 0; band < 3; band++) {
+    let rows = [0, 1, 2].sort(() => Math.random() - 0.5);
+    let bandRows = rows.map(r => permuted[band * 3 + r]);
+    for (let r = 0; r < 3; r++) permuted[band * 3 + r] = bandRows[r];
+  }
+
+  // 3. 50% chance to transpose matrix (swap rows and columns)
+  if (Math.random() > 0.5) {
+    permuted = permuted[0].map((_, colIdx) => permuted.map(row => row[colIdx]));
+  }
+
+  solutionMatrix = permuted;
+
+  // 4. Generate givens mask based on desired clues count
+  givensMask = Array.from({ length: 9 }, () => Array(9).fill(false));
+  boardState = Array.from({ length: 9 }, () => Array(9).fill(0));
+
+  let placedClues = 0;
+  while (placedClues < cluesCount) {
+    let r = Math.floor(Math.random() * 9);
+    let c = Math.floor(Math.random() * 9);
+    if (!givensMask[r][c]) {
+      givensMask[r][c] = true;
+      boardState[r][c] = solutionMatrix[r][c];
+      placedClues++;
+    }
+  }
 }
 
-// Render Grid Cells
+// --- RENDER ENGINE ---
 function renderBoard() {
   boardEl.innerHTML = '';
   
@@ -61,17 +77,15 @@ function renderBoard() {
       const val = boardState[r][c];
       if (val !== 0) cell.textContent = val;
 
-      // Style givens vs user numbers
       if (givensMask[r][c]) {
         cell.classList.add('given');
       } else if (val !== 0) {
         cell.classList.add('user-entry');
-        if (val !== SEED_SOLUTION[r][c]) {
+        if (val !== solutionMatrix[r][c]) {
           cell.classList.add('error');
         }
       }
 
-      // Highlight logic (selected cell + row/col/box crosshair)
       if (selectedIdx !== null) {
         if (idx === selectedIdx) {
           cell.classList.add('selected');
@@ -84,7 +98,6 @@ function renderBoard() {
         }
       }
 
-      // Cell selection handler
       cell.addEventListener('click', () => {
         selectedIdx = idx;
         renderBoard();
@@ -95,20 +108,25 @@ function renderBoard() {
   }
 }
 
-// Handle User Digit Input
+// --- USER INPUT HANDLERS ---
 function enterDigit(digit) {
   if (selectedIdx === null) return;
   const r = Math.floor(selectedIdx / 9);
   const c = selectedIdx % 9;
 
-  // Do not allow editing initial given numbers
   if (givensMask[r][c]) return;
 
   boardState[r][c] = digit;
   renderBoard();
 }
 
-// Event Listeners
+function initGame() {
+  selectedIdx = null;
+  generateNewPuzzle(36); // 36 givens = Medium difficulty
+  renderBoard();
+}
+
+// --- EVENT LISTENERS ---
 numpadEl.addEventListener('click', (e) => {
   const btn = e.target.closest('.num-btn');
   if (!btn) return;
@@ -118,11 +136,10 @@ numpadEl.addEventListener('click', (e) => {
 eraseBtn.addEventListener('click', () => enterDigit(0));
 newGameBtn.addEventListener('click', initGame);
 
-// Keyboard controls for desktop
 window.addEventListener('keydown', (e) => {
   if (e.key >= '1' && e.key <= '9') enterDigit(parseInt(e.key, 10));
   if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') enterDigit(0);
 });
 
-// Start game on load
+// Start initial game
 initGame();
