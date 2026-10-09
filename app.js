@@ -40,6 +40,33 @@ const modePencilBtn = document.getElementById('btn-mode-pencil');
 const modeColorBtn = document.getElementById('btn-mode-color');
 const colorPaletteEl = document.getElementById('color-palette');
 
+// Settings Elements
+const settingsBtn = document.getElementById('btn-settings');
+const settingsModal = document.getElementById('settings-modal');
+const closeSettingsBtn = document.getElementById('btn-close-settings');
+const toggleDarkMode = document.getElementById('toggle-dark-mode');
+
+// --- THEME ENGINE ---
+function initTheme() {
+  const savedTheme = localStorage.getItem('sudoku-theme');
+  const isDark = savedTheme !== 'light';
+  document.body.classList.toggle('light-mode', !isDark);
+  toggleDarkMode.checked = isDark;
+}
+
+toggleDarkMode.addEventListener('change', (e) => {
+  const isDark = e.target.checked;
+  document.body.classList.toggle('light-mode', !isDark);
+  localStorage.setItem('sudoku-theme', isDark ? 'dark' : 'light');
+});
+
+// Settings Modal Handlers
+settingsBtn.addEventListener('click', () => settingsModal.classList.remove('hidden'));
+closeSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
+settingsModal.addEventListener('click', (e) => {
+  if (e.target === settingsModal) settingsModal.classList.add('hidden');
+});
+
 // --- TIMER ENGINE ---
 function startTimer() {
   clearInterval(timerInterval);
@@ -142,12 +169,11 @@ function renderBoard() {
         cell.appendChild(pencilGrid);
       }
 
-      // Highlights logic
+      // Highlights logic with softer overlay styling
       if (selectedIdx !== null) {
         if (idx === selectedIdx) {
           cell.classList.add('selected');
         } else {
-          // Highlight matching digits everywhere else on board
           if (selectedVal !== 0 && val === selectedVal) {
             cell.classList.add('same-number');
           } else if (
@@ -155,7 +181,6 @@ function renderBoard() {
             c === selCol ||
             (Math.floor(r / 3) === Math.floor(selRow / 3) && Math.floor(c / 3) === Math.floor(selCol / 3))
           ) {
-            // Row, Column, and 3x3 Box Crosshairs highlight for ANY selected cell (empty or filled)
             cell.classList.add('highlighted');
           }
         }
@@ -265,7 +290,7 @@ function initGame() {
 // --- GLOBAL CLICK OUTSIDE LISTENER ---
 document.addEventListener('click', (e) => {
   const isCell = e.target.closest('.cell');
-  const isButton = e.target.closest('button, select, .color-swatch');
+  const isButton = e.target.closest('button, select, .color-swatch, .modal-card');
   if (!isCell && !isButton) {
     if (selectedIdx !== null) {
       selectedIdx = null;
@@ -299,6 +324,10 @@ newGameBtn.addEventListener('click', initGame);
 difficultySelect.addEventListener('change', initGame);
 
 window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    settingsModal.classList.add('hidden');
+    return;
+  }
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
     e.preventDefault();
     undo();
@@ -308,4 +337,5 @@ window.addEventListener('keydown', (e) => {
   if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') enterDigit(0);
 });
 
+initTheme();
 initGame();

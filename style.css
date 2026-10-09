@@ -1,4 +1,5 @@
 :root {
+  /* Default Dark Mode Theme */
   --bg-color: #0f172a;
   --card-bg: #1e293b;
   --text-main: #f8fafc;
@@ -9,6 +10,10 @@
   --border-subtle: #334155;
   --border-strong: #94a3b8;
 
+  /* Softer Highlight Tints (Dark Mode) */
+  --highlight-tint: rgba(255, 255, 255, 0.04);
+  --same-num-tint: rgba(56, 189, 248, 0.25);
+
   /* Custom Marking Colors */
   --mark-blue: rgba(56, 189, 248, 0.35);
   --mark-green: rgba(74, 222, 128, 0.35);
@@ -17,6 +22,23 @@
   --mark-red: rgba(220, 38, 38, 0.45);
   --mark-orange: rgba(251, 146, 60, 0.35);
   --mark-pink: rgba(251, 207, 232, 0.35);
+}
+
+/* Light Theme Overrides */
+body.light-mode {
+  --bg-color: #f1f5f9;
+  --card-bg: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --accent: #0284c7;
+  --user-digit: #2563eb;
+  --error-color: #dc2626;
+  --border-subtle: #e2e8f0;
+  --border-strong: #94a3b8;
+
+  /* Softer Highlight Tints (Light Mode) */
+  --highlight-tint: rgba(0, 0, 0, 0.05);
+  --same-num-tint: rgba(14, 165, 233, 0.2);
 }
 
 * {
@@ -36,6 +58,7 @@ body {
   justify-content: center;
   align-items: center;
   padding: 12px;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .app-container {
@@ -52,7 +75,6 @@ body {
   align-items: center;
 }
 
-/* Timer Display Header Styling */
 .timer-display {
   font-size: 1.5rem;
   font-weight: 700;
@@ -81,11 +103,16 @@ body {
   background: var(--card-bg);
   color: var(--text-main);
   border: 1px solid var(--border-subtle);
-  padding: 6px 12px;
+  padding: 6px 10px;
   border-radius: 8px;
   font-weight: 600;
   font-size: 0.85rem;
   cursor: pointer;
+}
+
+.btn-icon {
+  font-size: 1rem;
+  padding: 6px 8px;
 }
 
 .btn-primary {
@@ -94,7 +121,11 @@ body {
   border: none;
 }
 
-/* Game Area Vertical Layout & Spacing */
+body.light-mode .btn-primary {
+  color: #ffffff;
+}
+
+/* Game Board Container */
 .game-area {
   display: flex;
   flex-direction: column;
@@ -145,7 +176,6 @@ body {
   position: relative;
 }
 
-/* 3x3 Grid Spacing */
 .cell[data-col="2"], .cell[data-col="5"] { margin-right: 1px; }
 .cell[data-row="2"], .cell[data-row="5"] { margin-bottom: 1px; }
 
@@ -158,12 +188,12 @@ body {
 .cell.c-orange { background-color: var(--mark-orange); }
 .cell.c-pink { background-color: var(--mark-pink); }
 
-/* Transparent Overlay Highlights */
+/* Softer Overlay Highlights */
 .cell.highlighted::before {
   content: "";
   position: absolute;
   inset: 0;
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: var(--highlight-tint);
   pointer-events: none;
 }
 
@@ -171,7 +201,7 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  background-color: rgba(56, 189, 248, 0.25);
+  background-color: var(--same-num-tint);
   pointer-events: none;
 }
 
@@ -181,7 +211,7 @@ body {
 
 .cell.given { color: var(--text-muted); font-weight: 500; }
 .cell.user-entry { color: var(--user-digit); }
-.cell.error { color: var(--error-color); background-color: rgba(248, 113, 113, 0.25) !important; }
+.cell.error { color: var(--error-color); background-color: rgba(248, 113, 113, 0.2) !important; }
 
 /* Pencil Notes */
 .pencil-grid {
@@ -202,7 +232,7 @@ body {
   justify-content: center;
 }
 
-/* Mode Bar & Controls */
+/* Mode Bar & Palette */
 .mode-bar {
   display: flex;
   gap: 6px;
@@ -228,6 +258,10 @@ body {
   color: #0f172a;
 }
 
+body.light-mode .mode-btn.active {
+  color: #ffffff;
+}
+
 .color-palette {
   display: flex;
   justify-content: space-around;
@@ -247,7 +281,7 @@ body {
   cursor: pointer;
 }
 
-.color-swatch.active { border-color: #fff; transform: scale(1.15); }
+.color-swatch.active { border-color: var(--text-main); transform: scale(1.15); }
 .color-swatch.c-blue { background: #38bdf8; }
 .color-swatch.c-green { background: #4ade80; }
 .color-swatch.c-yellow { background: #facc15; }
@@ -255,9 +289,9 @@ body {
 .color-swatch.c-red { background: #dc2626; }
 .color-swatch.c-orange { background: #fb923c; }
 .color-swatch.c-pink { background: #fbcfe8; }
-.color-swatch.c-clear { background: var(--border-subtle); color: #fff; font-weight: bold; }
+.color-swatch.c-clear { background: var(--border-subtle); color: var(--text-main); font-weight: bold; }
 
-/* Clean 2x5 Numpad Grid */
+/* Numpad Grid */
 .numpad {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -276,6 +310,113 @@ body {
   text-align: center;
 }
 
-.btn-erase-slot {
-  color: var(--error-color);
+.btn-erase-slot { color: var(--error-color); }
+
+/* Settings Modal Backdrop & Dialog */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(3px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  padding: 16px;
+}
+
+.modal-backdrop.hidden { display: none; }
+
+.modal-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 300px;
+  padding: 16px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.modal-header h2 {
+  font-size: 1.15rem;
+  color: var(--accent);
+}
+
+.btn-close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.setting-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+/* Modern Bubble Toggle Switch */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: var(--border-subtle);
+  border-radius: 24px;
+  transition: 0.2s ease;
+}
+
+.toggle-slider::before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: var(--text-main);
+  border-radius: 50%;
+  transition: 0.2s ease;
+}
+
+input:checked + .toggle-slider {
+  background-color: var(--accent);
+}
+
+input:checked + .toggle-slider::before {
+  transform: translateX(20px);
+  background-color: #0f172a;
 }
