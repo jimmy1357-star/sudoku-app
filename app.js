@@ -1,4 +1,3 @@
-// Master base seed solution matrix
 const BASE_SOLUTION = [
   [5, 3, 4, 6, 7, 8, 9, 1, 2],
   [6, 7, 2, 1, 9, 5, 3, 4, 8],
@@ -11,41 +10,52 @@ const BASE_SOLUTION = [
   [3, 4, 5, 2, 8, 6, 1, 7, 9]
 ];
 
-// Game State
+// State Variables
 let solutionMatrix = [];
 let boardState = [];
 let givensMask = [];
+let notesState = [];
+let colorsState = [];
+
 let selectedIdx = null;
+let currentMode = 'digit'; // 'digit', 'pencil', 'color'
+let activeColor = 'c-blue';
 
 // DOM Elements
 const boardEl = document.getElementById('sudoku-board');
 const numpadEl = document.getElementById('numpad');
 const eraseBtn = document.getElementById('btn-erase');
 const newGameBtn = document.getElementById('btn-new-game');
+const difficultySelect = document.getElementById('difficulty-select');
+
+const modeDigitBtn = document.getElementById('btn-mode-digit');
+const modePencilBtn = document.getElementById('btn-mode-pencil');
+const modeColorBtn = document.getElementById('btn-mode-color');
+const colorPaletteEl = document.getElementById('color-palette');
 
 // --- PERMUTATION ENGINE ---
-function generateNewPuzzle(cluesCount = 36) {
-  // 1. Random digit mapping ([1..9] -> shuffled [1..9])
+function generateNewPuzzle() {
+  const cluesCount = parseInt(difficultySelect.value, 10);
+  
   const digitMap = [1, 2, 3, 4, 5, 6, 7, 8, 9].sort(() => Math.random() - 0.5);
   let permuted = BASE_SOLUTION.map(row => row.map(val => digitMap[val - 1]));
 
-  // 2. Shuffle rows within each 3x3 band
   for (let band = 0; band < 3; band++) {
     let rows = [0, 1, 2].sort(() => Math.random() - 0.5);
     let bandRows = rows.map(r => permuted[band * 3 + r]);
     for (let r = 0; r < 3; r++) permuted[band * 3 + r] = bandRows[r];
   }
 
-  // 3. 50% chance to transpose matrix (swap rows and columns)
   if (Math.random() > 0.5) {
     permuted = permuted[0].map((_, colIdx) => permuted.map(row => row[colIdx]));
   }
 
   solutionMatrix = permuted;
 
-  // 4. Generate givens mask based on desired clues count
   givensMask = Array.from({ length: 9 }, () => Array(9).fill(false));
   boardState = Array.from({ length: 9 }, () => Array(9).fill(0));
+  notesState = Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => new Set()));
+  colorsState = Array.from({ length: 9 }, () => Array(9).fill(null));
 
   let placedClues = 0;
   while (placedClues < cluesCount) {
@@ -65,6 +75,7 @@ function renderBoard() {
   
   const selRow = selectedIdx !== null ? Math.floor(selectedIdx / 9) : null;
   const selCol = selectedIdx !== null ? selectedIdx % 9 : null;
+  const selectedVal = selectedIdx !== null ? boardState[selRow][selCol] : 0;
 
   for (let r = 0; r < 9; r++) {
     for (let c = 0; c < 9; c++) {
@@ -74,21 +85,44 @@ function renderBoard() {
       cell.dataset.row = r;
       cell.dataset.col = c;
 
-      const val = boardState[r][c];
-      if (val !== 0) cell.textContent = val;
-
-      if (givensMask[r][c]) {
-        cell.classList.add('given');
-      } else if (val !== 0) {
-        cell.classList.add('user-entry');
-        if (val !== solutionMatrix[r][c]) {
-          cell.classList.add('error');
-        }
+      // Apply Custom Marking Color
+      if (colorsState[r][c]) {
+        cell.classList.add(colorsState[r][c]);
       }
 
+      const val = boardState[r][c];
+
+      if (val !== 0) {
+        cell.textContent = val;
+        if (givensMask[r][c]) {
+          cell.classList.add('given');
+        } else {
+          cell.classList.add('user-entry');
+          if (val !== solutionMatrix[r][c]) {
+            cell.classList.add('error');
+          }
+        }
+      } else if (notesState[r][c].size > 0) {
+        // Render 3x3 Pencil Notes Grid
+        const pencilGrid = document.createElement('div');
+        pencilGrid.className = 'pencil-grid';
+        for (let d = 1; d <= 9; d++) {
+          const pencilCell = document.createElement('div');
+          pencilCell.className = 'pencil-digit';
+          if (notesState[r][c].has(d)) {
+            pencilCell.textContent = d;
+          }
+          pencilGrid.appendChild(pencilCell);
+        }
+        cell.appendChild(pencilGrid);
+      }
+
+      // Highlights
       if (selectedIdx !== null) {
         if (idx === selectedIdx) {
           cell.classList.add('selected');
+        } else if (selectedVal !== 0 && val === selectedVal) {
+          cell.classList.add('same-number');
         } else if (
           r === selRow ||
           c === selCol ||
@@ -100,6 +134,9 @@ function renderBoard() {
 
       cell.addEventListener('click', () => {
         selectedIdx = idx;
+        if (currentMode === 'color') {
+          colorsState[r][c] = activeColor === 'clear' ? null : activeColor;
+        }
         renderBoard();
       });
 
@@ -108,7 +145,7 @@ function renderBoard() {
   }
 }
 
-// --- USER INPUT HANDLERS ---
+// --- USER INPUT HANDLER ---
 function enterDigit(digit) {
   if (selectedIdx === null) return;
   const r = Math.floor(selectedIdx / 9);
@@ -116,17 +153,51 @@ function enterDigit(digit) {
 
   if (givensMask[r][c]) return;
 
-  boardState[r][c] = digit;
+  if (currentMode === 'digit') {
+    boardState[r][c] = digit;
+    notesState[r][c].clear(); // Clear notes when entering digit
+  } else if (currentMode === 'pencil' && digit !== 0) {
+    boardState[r][c] = 0; // Clear main digit if in pencil mode
+    if (notesState[r][c].has(digit)) {
+      notesState[r][c].delete(digit);
+    } else {
+      notesState[r][c].add(digit);
+    }
+  } else if (digit === 0) {
+    boardState[r][c] = 0;
+    notesState[r][c].clear();
+  }
+
   renderBoard();
+}
+
+function setMode(mode) {
+  currentMode = mode;
+  modeDigitBtn.classList.toggle('active', mode === 'digit');
+  modePencilBtn.classList.toggle('active', mode === 'pencil');
+  modeColorBtn.classList.toggle('active', mode === 'color');
+  colorPaletteEl.classList.toggle('hidden', mode !== 'color');
 }
 
 function initGame() {
   selectedIdx = null;
-  generateNewPuzzle(36); // 36 givens = Medium difficulty
+  generateNewPuzzle();
   renderBoard();
 }
 
 // --- EVENT LISTENERS ---
+modeDigitBtn.addEventListener('click', () => setMode('digit'));
+modePencilBtn.addEventListener('click', () => setMode('pencil'));
+modeColorBtn.addEventListener('click', () => setMode('color'));
+
+colorPaletteEl.addEventListener('click', (e) => {
+  const swatch = e.target.closest('.color-swatch');
+  if (!swatch) return;
+  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+  swatch.classList.add('active');
+  activeColor = swatch.dataset.color;
+});
+
 numpadEl.addEventListener('click', (e) => {
   const btn = e.target.closest('.num-btn');
   if (!btn) return;
@@ -135,11 +206,11 @@ numpadEl.addEventListener('click', (e) => {
 
 eraseBtn.addEventListener('click', () => enterDigit(0));
 newGameBtn.addEventListener('click', initGame);
+difficultySelect.addEventListener('change', initGame);
 
 window.addEventListener('keydown', (e) => {
   if (e.key >= '1' && e.key <= '9') enterDigit(parseInt(e.key, 10));
   if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') enterDigit(0);
 });
 
-// Start initial game
 initGame();

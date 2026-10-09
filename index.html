@@ -3,15 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Modular Sudoku</title>
+  <title>Modern Sudoku</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="app-container">
-    <!-- Header Controls -->
+    <!-- Header & Difficulty Selector -->
     <header class="app-header">
       <h1>Sudoku</h1>
       <div class="header-controls">
+        <select id="difficulty-select" class="select-input">
+          <option value="42">Easy</option>
+          <option value="34" selected>Medium</option>
+          <option value="26">Hard</option>
+        </select>
         <button id="btn-new-game" class="btn btn-primary">New Game</button>
       </div>
     </header>
@@ -19,10 +24,24 @@
     <!-- Main Game Board Container -->
     <main class="game-area">
       <div id="sudoku-container" class="sudoku-container">
-        <!-- SVG Canvas for Thermo/Arrow lines overlaid on the grid -->
         <svg id="svg-overlay" class="svg-overlay" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
-        <!-- Interactive 9x9 CSS Grid -->
         <div id="sudoku-board" class="sudoku-board"></div>
+      </div>
+
+      <!-- Mode Selector Toolbar -->
+      <div class="mode-bar">
+        <button id="btn-mode-digit" class="mode-btn active">Digit</button>
+        <button id="btn-mode-pencil" class="mode-btn">Pencil ✏️</button>
+        <button id="btn-mode-color" class="mode-btn">Color 🎨</button>
+      </div>
+
+      <!-- Color Palette (Hidden unless Color mode active) -->
+      <div id="color-palette" class="color-palette hidden">
+        <button class="color-swatch c-blue" data-color="c-blue"></button>
+        <button class="color-swatch c-green" data-color="c-green"></button>
+        <button class="color-swatch c-yellow" data-color="c-yellow"></button>
+        <button class="color-swatch c-purple" data-color="c-purple"></button>
+        <button class="color-swatch c-clear" data-color="clear">✕</button>
       </div>
 
       <!-- Action Toolbar -->
@@ -30,7 +49,7 @@
         <button id="btn-erase" class="btn btn-secondary">Erase ⌫</button>
       </div>
 
-      <!-- Touch-Friendly Numpad -->
+      <!-- Touch Numpad -->
       <div id="numpad" class="numpad">
         <button class="num-btn" data-value="1">1</button>
         <button class="num-btn" data-value="2">2</button>
