@@ -16,7 +16,7 @@
   --mark-purple: rgba(192, 132, 252, 0.35);
   --mark-red: rgba(248, 113, 113, 0.35);
   --mark-orange: rgba(251, 146, 60, 0.35);
-  --mark-teal: rgba(45, 212, 191, 0.35);
+  --mark-pink: rgba(244, 114, 182, 0.35);
 }
 
 * {
@@ -149,7 +149,7 @@ body {
 .cell.c-purple { background-color: var(--mark-purple); }
 .cell.c-red { background-color: var(--mark-red); }
 .cell.c-orange { background-color: var(--mark-orange); }
-.cell.c-teal { background-color: var(--mark-teal); }
+.cell.c-pink { background-color: var(--mark-pink); }
 
 /* Transparent Overlay Highlights */
 .cell.highlighted::before {
@@ -247,7 +247,7 @@ body {
 .color-swatch.c-purple { background: #c084fc; }
 .color-swatch.c-red { background: #f87171; }
 .color-swatch.c-orange { background: #fb923c; }
-.color-swatch.c-teal { background: #2dd4bf; }
+.color-swatch.c-pink { background: #f472b6; }
 .color-swatch.c-clear { background: var(--border-subtle); color: #fff; font-weight: bold; }
 
 /* Clean 2x5 Numpad Grid */
