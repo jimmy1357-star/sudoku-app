@@ -135,7 +135,7 @@ body {
 .cell[data-col="2"], .cell[data-col="5"] { margin-right: 1px; }
 .cell[data-row="2"], .cell[data-row="5"] { margin-bottom: 1px; }
 
-/* Custom Marking Colors (Layer 1) */
+/* Custom Marking Colors */
 .cell.c-blue { background-color: var(--mark-blue); }
 .cell.c-green { background-color: var(--mark-green); }
 .cell.c-yellow { background-color: var(--mark-yellow); }
@@ -144,7 +144,7 @@ body {
 .cell.c-orange { background-color: var(--mark-orange); }
 .cell.c-teal { background-color: var(--mark-teal); }
 
-/* Transparent Overlay Highlights (Layer 2 - keeps marked colors visible!) */
+/* Transparent Overlay Highlights */
 .cell.highlighted::before {
   content: "";
   position: absolute;
@@ -243,8 +243,7 @@ body {
 .color-swatch.c-teal { background: #2dd4bf; }
 .color-swatch.c-clear { background: var(--border-subtle); color: #fff; font-weight: bold; }
 
-.controls-bar { display: flex; justify-content: flex-end; }
-
+/* Clean 2x5 Numpad Grid */
 .numpad {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -261,4 +260,8 @@ body {
   padding: 12px 0;
   cursor: pointer;
   text-align: center;
+}
+
+.btn-erase-slot {
+  color: var(--error-color);
 }
