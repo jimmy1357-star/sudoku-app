@@ -267,7 +267,7 @@ body.light-mode .pause-overlay {
 .cell.user-entry { color: var(--user-digit); }
 .cell.error { color: var(--error-color); background-color: rgba(248, 113, 113, 0.2) !important; }
 
-/* Completion Pulse Overlay & Animation */
+/* 1000ms Completion Pulse Overlay & Animation */
 .cell.completed-pulse::after {
   content: "";
   position: absolute;
@@ -275,8 +275,8 @@ body.light-mode .pause-overlay {
   background-color: var(--completion-glow);
   pointer-events: none;
   z-index: 10;
-  animation: pulseFlash 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  animation-delay: calc(var(--delay-step, 0) * 0.04s);
+  animation: pulseFlash 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: calc(var(--delay-step, 0) * 0.06s);
 }
 
 @keyframes pulseFlash {

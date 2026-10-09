@@ -281,14 +281,14 @@ function checkAndTriggerCompletions(r, c) {
     }
   }
 
-  // Trigger outward expanding pulses
+  // Trigger 1000ms outward expanding pulses
   if (rowValid) {
     for (let col = 0; col < 9; col++) {
       const cell = boardEl.children[r * 9 + col];
       if (cell) {
         cell.style.setProperty('--delay-step', Math.abs(col - c));
         cell.classList.add('completed-pulse');
-        setTimeout(() => cell.classList.remove('completed-pulse'), 1000);
+        setTimeout(() => cell.classList.remove('completed-pulse'), 1400);
       }
     }
   }
@@ -299,7 +299,7 @@ function checkAndTriggerCompletions(r, c) {
       if (cell) {
         cell.style.setProperty('--delay-step', Math.abs(row - r));
         cell.classList.add('completed-pulse');
-        setTimeout(() => cell.classList.remove('completed-pulse'), 1000);
+        setTimeout(() => cell.classList.remove('completed-pulse'), 1400);
       }
     }
   }
@@ -314,7 +314,7 @@ function checkAndTriggerCompletions(r, c) {
           const dist = Math.max(Math.abs(row - r), Math.abs(col - c));
           cell.style.setProperty('--delay-step', dist);
           cell.classList.add('completed-pulse');
-          setTimeout(() => cell.classList.remove('completed-pulse'), 1000);
+          setTimeout(() => cell.classList.remove('completed-pulse'), 1400);
         }
       }
     }
