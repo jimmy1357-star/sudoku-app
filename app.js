@@ -22,7 +22,12 @@ let selectedIdx = null;
 let currentMode = 'digit'; // 'digit', 'pencil', 'color'
 let activeColor = 'c-blue';
 
+// Timer State
+let timerInterval = null;
+let secondsElapsed = 0;
+
 // DOM Elements
+const timerEl = document.getElementById('timer');
 const boardEl = document.getElementById('sudoku-board');
 const numpadEl = document.getElementById('numpad');
 const eraseBtn = document.getElementById('btn-erase');
@@ -34,6 +39,25 @@ const modeDigitBtn = document.getElementById('btn-mode-digit');
 const modePencilBtn = document.getElementById('btn-mode-pencil');
 const modeColorBtn = document.getElementById('btn-mode-color');
 const colorPaletteEl = document.getElementById('color-palette');
+
+// --- TIMER ENGINE ---
+function startTimer() {
+  clearInterval(timerInterval);
+  secondsElapsed = 0;
+  updateTimerDisplay();
+  timerInterval = setInterval(() => {
+    secondsElapsed++;
+    updateTimerDisplay();
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const mins = Math.floor(secondsElapsed / 60);
+  const secs = secondsElapsed % 60;
+  const formattedMins = String(mins).padStart(2, '0');
+  const formattedSecs = String(secs).padStart(2, '0');
+  timerEl.textContent = `${formattedMins}:${formattedSecs}`;
+}
 
 // --- PERMUTATION ENGINE ---
 function generateNewPuzzle() {
@@ -174,7 +198,7 @@ function enterDigit(digit) {
   const prevNotes = new Set(notesState[r][c]);
 
   if (currentMode === 'digit') {
-    if (prevVal === digit) return; // No change
+    if (prevVal === digit) return;
     boardState[r][c] = digit;
     notesState[r][c].clear();
   } else if (currentMode === 'pencil' && digit !== 0) {
@@ -185,7 +209,7 @@ function enterDigit(digit) {
       notesState[r][c].add(digit);
     }
   } else if (digit === 0) {
-    if (prevVal === 0 && prevNotes.size === 0) return; // Nothing to erase
+    if (prevVal === 0 && prevNotes.size === 0) return;
     boardState[r][c] = 0;
     notesState[r][c].clear();
   }
@@ -232,6 +256,7 @@ function initGame() {
   selectedIdx = null;
   generateNewPuzzle();
   renderBoard();
+  startTimer();
 }
 
 // --- GLOBAL CLICK OUTSIDE LISTENER ---
