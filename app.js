@@ -117,25 +117,35 @@ function renderBoard() {
         cell.appendChild(pencilGrid);
       }
 
-      // Highlights
+      // Highlights logic
       if (selectedIdx !== null) {
         if (idx === selectedIdx) {
           cell.classList.add('selected');
-        } else if (selectedVal !== 0 && val === selectedVal) {
-          cell.classList.add('same-number');
-        } else if (
-          r === selRow ||
-          c === selCol ||
-          (Math.floor(r / 3) === Math.floor(selRow / 3) && Math.floor(c / 3) === Math.floor(selCol / 3))
-        ) {
-          cell.classList.add('highlighted');
+        } else if (selectedVal !== 0) {
+          // Crosshairs & matching digits ONLY highlight when a cell WITH a number is selected
+          if (val === selectedVal) {
+            cell.classList.add('same-number');
+          } else if (
+            r === selRow ||
+            c === selCol ||
+            (Math.floor(r / 3) === Math.floor(selRow / 3) && Math.floor(c / 3) === Math.floor(selCol / 3))
+          ) {
+            cell.classList.add('highlighted');
+          }
         }
       }
 
-      cell.addEventListener('click', () => {
-        selectedIdx = idx;
-        if (currentMode === 'color') {
-          colorsState[r][c] = activeColor === 'clear' ? null : activeColor;
+      // Cell click handler
+      cell.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (selectedIdx === idx) {
+          // Re-clicking selected cell deselects it
+          selectedIdx = null;
+        } else {
+          selectedIdx = idx;
+          if (currentMode === 'color') {
+            colorsState[r][c] = activeColor === 'clear' ? null : activeColor;
+          }
         }
         renderBoard();
       });
@@ -145,7 +155,7 @@ function renderBoard() {
   }
 }
 
-// --- USER INPUT HANDLER ---
+// --- USER INPUT HANDLERS ---
 function enterDigit(digit) {
   if (selectedIdx === null) return;
   const r = Math.floor(selectedIdx / 9);
@@ -155,9 +165,9 @@ function enterDigit(digit) {
 
   if (currentMode === 'digit') {
     boardState[r][c] = digit;
-    notesState[r][c].clear(); // Clear notes when entering digit
+    notesState[r][c].clear();
   } else if (currentMode === 'pencil' && digit !== 0) {
-    boardState[r][c] = 0; // Clear main digit if in pencil mode
+    boardState[r][c] = 0;
     if (notesState[r][c].has(digit)) {
       notesState[r][c].delete(digit);
     } else {
@@ -184,6 +194,18 @@ function initGame() {
   generateNewPuzzle();
   renderBoard();
 }
+
+// --- GLOBAL CLICK OUTSIDE LISTENER ---
+document.addEventListener('click', (e) => {
+  const isCell = e.target.closest('.cell');
+  const isButton = e.target.closest('button, select, .color-swatch');
+  if (!isCell && !isButton) {
+    if (selectedIdx !== null) {
+      selectedIdx = null;
+      renderBoard();
+    }
+  }
+});
 
 // --- EVENT LISTENERS ---
 modeDigitBtn.addEventListener('click', () => setMode('digit'));
