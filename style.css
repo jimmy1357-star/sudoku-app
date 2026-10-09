@@ -14,7 +14,7 @@
   --highlight-tint: rgba(255, 255, 255, 0.04);
   --same-num-tint: rgba(56, 189, 248, 0.25);
 
-  /* Custom Marking Colors */
+  /* Custom Marking Colors (Dark Mode) */
   --mark-blue: rgba(56, 189, 248, 0.35);
   --mark-green: rgba(74, 222, 128, 0.35);
   --mark-yellow: rgba(250, 204, 21, 0.35);
@@ -39,6 +39,13 @@ body.light-mode {
   /* Softer Highlight Tints (Light Mode) */
   --highlight-tint: rgba(0, 0, 0, 0.05);
   --same-num-tint: rgba(14, 165, 233, 0.2);
+
+  /* Calibrated Pink for Light Backgrounds */
+  --mark-pink: rgba(236, 72, 153, 0.25);
+}
+
+body.light-mode .color-swatch.c-pink {
+  background: #f472b6;
 }
 
 * {
