@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Modular Sudoku</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header Controls -->
+    <header class="app-header">
+      <h1>Sudoku</h1>
+      <div class="header-controls">
+        <button id="btn-new-game" class="btn btn-primary">New Game</button>
+      </div>
+    </header>
+
+    <!-- Main Game Board Container -->
+    <main class="game-area">
+      <div id="sudoku-container" class="sudoku-container">
+        <!-- SVG Canvas for Thermo/Arrow lines overlaid on the grid -->
+        <svg id="svg-overlay" class="svg-overlay" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+        <!-- Interactive 9x9 CSS Grid -->
+        <div id="sudoku-board" class="sudoku-board"></div>
+      </div>
+
+      <!-- Action Toolbar -->
+      <div class="controls-bar">
+        <button id="btn-erase" class="btn btn-secondary">Erase ⌫</button>
+      </div>
+
+      <!-- Touch-Friendly Numpad -->
+      <div id="numpad" class="numpad">
+        <button class="num-btn" data-value="1">1</button>
+        <button class="num-btn" data-value="2">2</button>
+        <button class="num-btn" data-value="3">3</button>
+        <button class="num-btn" data-value="4">4</button>
+        <button class="num-btn" data-value="5">5</button>
+        <button class="num-btn" data-value="6">6</button>
+        <button class="num-btn" data-value="7">7</button>
+        <button class="num-btn" data-value="8">8</button>
+        <button class="num-btn" data-value="9">9</button>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

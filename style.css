@@ -1,0 +1,159 @@
+:root {
+  --bg-color: #0f172a;
+  --card-bg: #1e293b;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --accent: #38bdf8;
+  --user-digit: #60a5fa;
+  --error-color: #f87171;
+  --highlight-bg: #334155;
+  --selected-bg: #0284c7;
+  --border-subtle: #334155;
+  --border-strong: #94a3b8;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px;
+}
+
+.app-container {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.app-header h1 {
+  font-size: 1.5rem;
+  color: var(--accent);
+}
+
+.btn {
+  background: var(--card-bg);
+  color: var(--text-main);
+  border: 1px solid var(--border-subtle);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #0f172a;
+  border: none;
+}
+
+.btn:active {
+  opacity: 0.8;
+}
+
+/* Board Wrapper & SVG Layer */
+.sudoku-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border: 3px solid var(--border-strong);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--card-bg);
+}
+
+.svg-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.sudoku-board {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  grid-template-rows: repeat(9, 1fr);
+  width: 100%;
+  height: 100%;
+  position: relative;
+  z-index: 2;
+}
+
+/* Individual Cell Styling */
+.cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  cursor: pointer;
+  border-right: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  background: transparent;
+  transition: background-color 0.1s ease;
+}
+
+/* Standard 3x3 Block Sub-borders */
+.cell[data-col="2"], .cell[data-col="5"] { border-right: 2px solid var(--border-strong); }
+.cell[data-row="2"], .cell[data-row="5"] { border-bottom: 2px solid var(--border-strong); }
+
+/* Custom Irregular Region Borders (Dynamic overrides) */
+.cell.border-right-heavy { border-right: 2px solid var(--border-strong) !important; }
+.cell.border-bottom-heavy { border-bottom: 2px solid var(--border-strong) !important; }
+
+/* Cell States */
+.cell.given { color: var(--text-muted); font-weight: 500; }
+.cell.user-entry { color: var(--user-digit); }
+.cell.error { color: var(--error-color); background: rgba(248, 113, 113, 0.15); }
+.cell.highlighted { background: var(--highlight-bg); }
+.cell.selected { background: var(--selected-bg) !important; color: #fff; }
+
+/* Controls & Numpad */
+.controls-bar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.numpad {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.num-btn {
+  background: var(--card-bg);
+  color: var(--text-main);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  padding: 12px 0;
+  cursor: pointer;
+  text-align: center;
+}
+
+.num-btn:active {
+  background: var(--border-subtle);
+}
