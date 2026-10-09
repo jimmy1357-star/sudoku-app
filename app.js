@@ -22,10 +22,10 @@ let selectedIdx = null;
 let currentMode = 'digit'; // 'digit', 'pencil', 'color'
 let activeColor = 'c-blue';
 
-// Settings State
+// Settings State (Default Highlight Errors to FALSE)
 let settingsAutoErase = true;
 let settingsShowCounts = true;
-let settingsHighlightErrors = true;
+let settingsHighlightErrors = false;
 
 // Timer State
 let timerInterval = null;
@@ -73,7 +73,7 @@ function initSettings() {
   settingsShowCounts = localStorage.getItem('sudoku-show-counts') !== 'false';
   toggleDigitCounts.checked = settingsShowCounts;
 
-  settingsHighlightErrors = localStorage.getItem('sudoku-highlight-errors') !== 'false';
+  settingsHighlightErrors = localStorage.getItem('sudoku-highlight-errors') === 'true';
   toggleHighlightErrors.checked = settingsHighlightErrors;
 }
 
@@ -211,6 +211,33 @@ function generateNewPuzzle() {
   }
 }
 
+// --- RULE-BASED CONFLICT VALIDATION ENGINE ---
+function hasConflict(r, c) {
+  const val = boardState[r][c];
+  if (val === 0) return false;
+
+  // Check same row & column
+  for (let i = 0; i < 9; i++) {
+    if (i !== c && boardState[r][i] === val) return true;
+    if (i !== r && boardState[i][c] === val) return true;
+  }
+
+  // Check same 3x3 box
+  const boxStartRow = Math.floor(r / 3) * 3;
+  const boxStartCol = Math.floor(c / 3) * 3;
+  for (let br = 0; br < 3; br++) {
+    for (let bc = 0; bc < 3; bc++) {
+      const row = boxStartRow + br;
+      const col = boxStartCol + bc;
+      if ((row !== r || col !== c) && boardState[row][col] === val) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 // --- REMAINING DIGIT COUNTER ENGINE ---
 function updateDigitCounts() {
   const counts = Array(10).fill(0);
@@ -267,7 +294,8 @@ function renderBoard() {
           cell.classList.add('given');
         } else {
           cell.classList.add('user-entry');
-          if (settingsHighlightErrors && val !== solutionMatrix[r][c]) {
+          // Dynamic Rule-Based Conflict Checking
+          if (settingsHighlightErrors && hasConflict(r, c)) {
             cell.classList.add('error');
           }
         }
@@ -357,18 +385,15 @@ function enterDigit(digit) {
       const boxStartCol = Math.floor(c / 3) * 3;
 
       for (let i = 0; i < 9; i++) {
-        // Same row
         if (notesState[r][i].has(digit)) {
           notesState[r][i].delete(digit);
           autoErasedNotes.push({ r, c: i, digit });
         }
-        // Same column
         if (notesState[i][c].has(digit)) {
           notesState[i][c].delete(digit);
           autoErasedNotes.push({ r: i, c, digit });
         }
       }
-      // Same 3x3 box
       for (let br = 0; br < 3; br++) {
         for (let bc = 0; bc < 3; bc++) {
           const row = boxStartRow + br;
@@ -418,7 +443,6 @@ function undo() {
     boardState[r][c] = lastMove.prevVal;
     notesState[r][c] = new Set(lastMove.prevNotes);
 
-    // Restore any auto-erased pencil notes!
     if (lastMove.autoErasedNotes && lastMove.autoErasedNotes.length > 0) {
       lastMove.autoErasedNotes.forEach(item => {
         notesState[item.r][item.c].add(item.digit);
