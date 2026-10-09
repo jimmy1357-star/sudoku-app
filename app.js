@@ -22,7 +22,7 @@ let selectedIdx = null;
 let currentMode = 'digit'; // 'digit', 'pencil', 'color'
 let activeColor = 'c-blue';
 
-// Settings State (Default Highlight Errors to FALSE)
+// Settings State
 let settingsAutoErase = true;
 let settingsShowCounts = true;
 let settingsHighlightErrors = false;
@@ -216,13 +216,11 @@ function hasConflict(r, c) {
   const val = boardState[r][c];
   if (val === 0) return false;
 
-  // Check same row & column
   for (let i = 0; i < 9; i++) {
     if (i !== c && boardState[r][i] === val) return true;
     if (i !== r && boardState[i][c] === val) return true;
   }
 
-  // Check same 3x3 box
   const boxStartRow = Math.floor(r / 3) * 3;
   const boxStartCol = Math.floor(c / 3) * 3;
   for (let br = 0; br < 3; br++) {
@@ -236,6 +234,91 @@ function hasConflict(r, c) {
   }
 
   return false;
+}
+
+// --- COMPLETION PULSE CHECK ENGINE ---
+function checkAndTriggerCompletions(r, c) {
+  // Check Row
+  let rowSet = new Set();
+  let rowValid = true;
+  for (let i = 0; i < 9; i++) {
+    const v = boardState[r][i];
+    if (v === 0 || rowSet.has(v) || hasConflict(r, i)) {
+      rowValid = false;
+      break;
+    }
+    rowSet.add(v);
+  }
+
+  // Check Column
+  let colSet = new Set();
+  let colValid = true;
+  for (let i = 0; i < 9; i++) {
+    const v = boardState[i][c];
+    if (v === 0 || colSet.has(v) || hasConflict(i, c)) {
+      colValid = false;
+      break;
+    }
+    colSet.add(v);
+  }
+
+  // Check 3x3 Box
+  let boxSet = new Set();
+  let boxValid = true;
+  const boxStartRow = Math.floor(r / 3) * 3;
+  const boxStartCol = Math.floor(c / 3) * 3;
+
+  for (let br = 0; br < 3; br++) {
+    for (let bc = 0; bc < 3; bc++) {
+      const row = boxStartRow + br;
+      const col = boxStartCol + bc;
+      const v = boardState[row][col];
+      if (v === 0 || boxSet.has(v) || hasConflict(row, col)) {
+        boxValid = false;
+        break;
+      }
+      boxSet.add(v);
+    }
+  }
+
+  // Trigger outward expanding pulses
+  if (rowValid) {
+    for (let col = 0; col < 9; col++) {
+      const cell = boardEl.children[r * 9 + col];
+      if (cell) {
+        cell.style.setProperty('--delay-step', Math.abs(col - c));
+        cell.classList.add('completed-pulse');
+        setTimeout(() => cell.classList.remove('completed-pulse'), 1000);
+      }
+    }
+  }
+
+  if (colValid) {
+    for (let row = 0; row < 9; row++) {
+      const cell = boardEl.children[row * 9 + c];
+      if (cell) {
+        cell.style.setProperty('--delay-step', Math.abs(row - r));
+        cell.classList.add('completed-pulse');
+        setTimeout(() => cell.classList.remove('completed-pulse'), 1000);
+      }
+    }
+  }
+
+  if (boxValid) {
+    for (let br = 0; br < 3; br++) {
+      for (let bc = 0; bc < 3; bc++) {
+        const row = boxStartRow + br;
+        const col = boxStartCol + bc;
+        const cell = boardEl.children[row * 9 + col];
+        if (cell) {
+          const dist = Math.max(Math.abs(row - r), Math.abs(col - c));
+          cell.style.setProperty('--delay-step', dist);
+          cell.classList.add('completed-pulse');
+          setTimeout(() => cell.classList.remove('completed-pulse'), 1000);
+        }
+      }
+    }
+  }
 }
 
 // --- REMAINING DIGIT COUNTER ENGINE ---
@@ -294,7 +377,6 @@ function renderBoard() {
           cell.classList.add('given');
         } else {
           cell.classList.add('user-entry');
-          // Dynamic Rule-Based Conflict Checking
           if (settingsHighlightErrors && hasConflict(r, c)) {
             cell.classList.add('error');
           }
@@ -379,7 +461,6 @@ function enterDigit(digit) {
     boardState[r][c] = digit;
     notesState[r][c].clear();
 
-    // Auto-Erase Pencil Notes in same Row, Column, and 3x3 Box
     if (settingsAutoErase && digit !== 0) {
       const boxStartRow = Math.floor(r / 3) * 3;
       const boxStartCol = Math.floor(c / 3) * 3;
@@ -430,6 +511,11 @@ function enterDigit(digit) {
   });
 
   renderBoard();
+
+  // Trigger completion outward pulse if row/column/box is filled
+  if (digit !== 0 && currentMode === 'digit') {
+    checkAndTriggerCompletions(r, c);
+  }
 }
 
 // --- UNDO ENGINE ---
