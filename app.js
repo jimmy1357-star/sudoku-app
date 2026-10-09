@@ -142,17 +142,20 @@ function renderBoard() {
         cell.appendChild(pencilGrid);
       }
 
+      // Highlights logic
       if (selectedIdx !== null) {
         if (idx === selectedIdx) {
           cell.classList.add('selected');
-        } else if (selectedVal !== 0) {
-          if (val === selectedVal) {
+        } else {
+          // Highlight matching digits everywhere else on board
+          if (selectedVal !== 0 && val === selectedVal) {
             cell.classList.add('same-number');
           } else if (
             r === selRow ||
             c === selCol ||
             (Math.floor(r / 3) === Math.floor(selRow / 3) && Math.floor(c / 3) === Math.floor(selCol / 3))
           ) {
+            // Row, Column, and 3x3 Box Crosshairs highlight for ANY selected cell (empty or filled)
             cell.classList.add('highlighted');
           }
         }
