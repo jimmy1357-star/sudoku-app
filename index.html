@@ -4,6 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Modern Sudoku</title>
+  
+  <!-- PWA Manifest & Mobile Web App Capabilities -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/566/566295.png">
+
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -123,6 +131,17 @@
       </div>
     </div>
   </div>
+
+  <!-- Register Service Worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((reg) => console.log('Service Worker Registered:', reg.scope))
+          .catch((err) => console.error('Service Worker Registration Failed:', err));
+      });
+    }
+  </script>
 
   <script src="app.js"></script>
 </body>
