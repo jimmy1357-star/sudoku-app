@@ -74,6 +74,7 @@ html, body {
   background-color: var(--bg-color);
   color: var(--text-main);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  overscroll-behavior-y: none; /* Disables pull-down-to-refresh on mobile/PWA */
 }
 
 body {

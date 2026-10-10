@@ -546,11 +546,15 @@ function startNewGame() {
 }
 
 function resumeSavedGame(saved) {
-  boardState = saved.boardState;
-  givensMask = saved.givensMask;
-  solutionMatrix = saved.solutionMatrix;
-  notesState = saved.notesState.map(row => row.map(arr => new Set(arr)));
-  colorsState = saved.colorsState;
+  boardState = saved.boardState && saved.boardState.length === 9 ? saved.boardState : Array.from({ length: 9 }, () => Array(9).fill(0));
+  givensMask = saved.givensMask && saved.givensMask.length === 9 ? saved.givensMask : Array.from({ length: 9 }, () => Array(9).fill(false));
+  solutionMatrix = saved.solutionMatrix && saved.solutionMatrix.length === 9 ? saved.solutionMatrix : BASE_SOLUTION;
+  
+  notesState = saved.notesState && saved.notesState.length === 9 
+    ? saved.notesState.map(row => row.map(arr => new Set(arr || []))) 
+    : Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => new Set()));
+    
+  colorsState = saved.colorsState && saved.colorsState.length === 9 ? saved.colorsState : Array.from({ length: 9 }, () => Array(9).fill(null));
   thermometers = saved.thermometers || [];
   secondsElapsed = saved.secondsElapsed || 0;
   hintsRemaining = saved.hintsRemaining ?? 5;
