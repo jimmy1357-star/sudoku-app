@@ -24,6 +24,13 @@
         <p>Select your play style</p>
       </div>
 
+      <!-- Dynamic Resume Active Game Card (Hidden by default) -->
+      <button id="btn-resume-saved" class="main-mode-card resume-card hidden">
+        <span class="mode-icon">▶</span>
+        <span class="mode-title">Resume Active Game</span>
+        <span class="mode-desc" id="resume-desc">Continue your previous puzzle</span>
+      </button>
+
       <div class="main-mode-grid">
         <button id="btn-mode-classic" class="main-mode-card">
           <span class="mode-icon">
@@ -150,24 +157,28 @@
 
     <!-- === SCREEN 3: ACTIVE GAME BOARD === -->
     <div id="game-screen" class="game-screen hidden">
-      <!-- Header Controls -->
-      <header class="app-header">
-        <div class="timer-box">
-          <div id="timer" class="timer-display">00:00</div>
-          <button id="btn-pause" class="btn btn-icon" title="Pause Game">⏸</button>
+      
+      <!-- TWO-TIER HEADER LAYOUT -->
+      <header class="app-header-two-tier">
+        <!-- Tier 1: System & Navigation -->
+        <div class="header-tier">
+          <div class="tier-group">
+            <button id="btn-menu" class="btn btn-icon" title="Home Menu">🏠</button>
+            <button id="btn-settings-game" class="btn btn-icon" title="Settings">⚙️</button>
+          </div>
+          <div class="timer-box">
+            <div id="timer" class="timer-display">00:00</div>
+            <button id="btn-pause" class="btn btn-icon" title="Pause Game">⏸</button>
+          </div>
         </div>
-        <div class="header-controls">
+
+        <!-- Tier 2: Gameplay Actions & Indicators -->
+        <div class="header-tier">
           <div id="mistakes-box" class="mistakes-box hidden">❌ <span id="mistakes-count">0</span>/3</div>
-          <button id="btn-hint" class="btn">💡 Hint (<span id="hint-count">5</span>)</button>
-          <button id="btn-menu" class="btn btn-with-icon">
-            <svg class="btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-              <polyline points="9 22 9 12 15 12 15 22"/>
-            </svg>
-            Menu
-          </button>
-          <button id="btn-undo" class="btn">Undo ↩</button>
-          <button id="btn-settings-game" class="btn btn-icon" title="Settings">⚙️</button>
+          <div class="tier-group right-actions">
+            <button id="btn-undo" class="btn">Undo ↩</button>
+            <button id="btn-hint" class="btn">💡 Hint (<span id="hint-count">5</span>)</button>
+          </div>
         </div>
       </header>
 

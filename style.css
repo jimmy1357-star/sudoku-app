@@ -170,6 +170,15 @@ body {
   color: var(--text-muted);
 }
 
+/* Resume Active Game Card */
+.resume-card {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.15) 0%, var(--card-bg) 100%);
+  border: 2px solid var(--accent);
+}
+.resume-card.hidden {
+  display: none;
+}
+
 /* Landing Main Modes (Classic / Challenge) */
 .main-mode-grid {
   display: flex;
@@ -181,10 +190,10 @@ body {
   background: var(--card-bg);
   border: 2px solid var(--border-subtle);
   border-radius: 12px;
-  padding: 18px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   cursor: pointer;
   text-align: left;
   transition: all 0.2s ease;
@@ -205,13 +214,13 @@ body {
 }
 
 .mode-title {
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: var(--text-main);
 }
 
 .mode-desc {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--text-muted);
 }
 
@@ -312,56 +321,64 @@ body {
   display: none;
 }
 
-/* Header Controls */
-.app-header {
+/* Two-Tier Header Layout */
+.app-header-two-tier {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  background: var(--card-bg);
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+}
+
+.header-tier {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 4px;
   width: 100%;
+}
+
+.tier-group {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.right-actions {
+  margin-left: auto;
 }
 
 .timer-box {
   display: flex;
   align-items: center;
-  gap: 3px;
-  flex-shrink: 0;
+  gap: 4px;
 }
 
 .timer-display {
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--accent);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.5px;
 }
 
-.header-controls {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-  flex-shrink: 1;
-  min-width: 0;
-}
-
 .btn {
   background: var(--card-bg);
   color: var(--text-main);
   border: 1px solid var(--border-subtle);
-  padding: 6px 10px;
+  padding: 5px 9px;
   border-radius: 6px;
   font-weight: 600;
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   cursor: pointer;
   white-space: nowrap;
-  flex-shrink: 1;
-  min-width: 0;
 }
 
 .btn-icon {
   font-size: 0.85rem;
-  padding: 6px 8px;
-  flex-shrink: 0;
+  padding: 5px 7px;
 }
 
 .btn-primary {

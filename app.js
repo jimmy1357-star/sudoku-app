@@ -54,6 +54,8 @@ const gameScreenEl = document.getElementById('game-screen');
 // Navigation Buttons
 const btnModeClassic = document.getElementById('btn-mode-classic');
 const btnModeChallenge = document.getElementById('btn-mode-challenge');
+const btnResumeSaved = document.getElementById('btn-resume-saved');
+const resumeDesc = document.getElementById('resume-desc');
 
 const btnBackClassic = document.getElementById('btn-back-classic');
 const btnBackChallenge = document.getElementById('btn-back-challenge');
@@ -113,6 +115,49 @@ const toggleHighlightErrors = document.getElementById('toggle-highlight-errors')
 const statsBtnLanding = document.getElementById('btn-landing-stats');
 const statsModal = document.getElementById('stats-modal');
 const closeStatsBtn = document.getElementById('btn-close-stats');
+
+// --- PERSISTENT SAVE STATE ENGINE ---
+function saveGameToStorage() {
+  const gameState = {
+    boardState,
+    givensMask,
+    solutionMatrix,
+    notesState: notesState.map(row => row.map(set => Array.from(set))),
+    colorsState,
+    thermometers,
+    secondsElapsed,
+    hintsRemaining,
+    mistakesCount,
+    selectedVariant,
+    selectedClues
+  };
+  localStorage.setItem('sudoku-active-game', JSON.stringify(gameState));
+}
+
+function loadGameFromStorage() {
+  const saved = localStorage.getItem('sudoku-active-game');
+  if (!saved) return null;
+  try {
+    return JSON.parse(saved);
+  } catch (e) {
+    return null;
+  }
+}
+
+function clearSavedGame() {
+  localStorage.removeItem('sudoku-active-game');
+}
+
+function checkActiveSaveStateOnLanding() {
+  const saved = loadGameFromStorage();
+  if (saved) {
+    btnResumeSaved.classList.remove('hidden');
+    const modeName = saved.selectedVariant === 'classic' ? 'Classic' : `Challenge (${saved.selectedVariant})`;
+    resumeDesc.textContent = `${modeName} — Time: ${Math.floor(saved.secondsElapsed / 60)}m ${saved.secondsElapsed % 60}s`;
+  } else {
+    btnResumeSaved.classList.add('hidden');
+  }
+}
 
 // --- WEB AUDIO SYNTHESIZER ---
 let audioCtx = null;
@@ -264,49 +309,43 @@ function triggerHint() {
   hintsRemaining--;
   hintCountEl.textContent = hintsRemaining;
   closeHintModal();
+  saveGameToStorage();
 
-  // 1. Check for active errors first
   for (let r = 0; r < 9; r++) {
     for (let c = 0; c < 9; c++) {
       if (boardState[r][c] !== 0 && !givensMask[r][c] && hasConflict(r, c)) {
         selectedIdx = r * 9 + c;
         renderBoard();
-        alert(`💡 Logical Guide: Cell at Row ${r + 1}, Col ${c + 1} violates a rule constraint. Look at its intersecting row/column or thermometer path.`);
+        alert(`💡 Logical Guide: Cell at Row ${r + 1}, Col ${c + 1} violates a rule constraint.`);
         return;
       }
     }
   }
 
-  // 2. Generate insightful thermometer guidance based on solution math
   if (selectedVariant === 'thermometer' && thermometers.length > 0) {
     const thermo = thermometers[Math.floor(Math.random() * thermometers.length)];
     const bulb = thermo[0];
-    const correctVal = solutionMatrix[bulb.r][bulb.c];
     const maxPossibleAtBulb = 10 - thermo.length;
 
     selectedIdx = bulb.r * 9 + bulb.c;
     renderBoard();
 
     if (boardState[bulb.r][bulb.c] === 0) {
-      alert(`💡 Logical Guide: Look at the thermometer bulb at Row ${bulb.r + 1}, Col ${bulb.c + 1}. Because this thermometer is ${thermo.length} cells long, the bulb cannot exceed ${maxPossibleAtBulb} (leaving space for higher numbers along the stem).`);
+      alert(`💡 Logical Guide: Look at the thermometer bulb at Row ${bulb.r + 1}, Col ${bulb.c + 1}. Because this thermometer is ${thermo.length} cells long, the bulb cannot exceed ${maxPossibleAtBulb}.`);
       return;
     }
   }
 
-  // 3. General empty cell deduction guidance
   for (let r = 0; r < 9; r++) {
     for (let c = 0; c < 9; c++) {
       if (boardState[r][c] === 0 && !givensMask[r][c]) {
         selectedIdx = r * 9 + c;
         renderBoard();
-        const correct = solutionMatrix[r][c];
-        alert(`💡 Logical Guide: Examine Row ${r + 1}, Col ${c + 1}. Note what numbers are already locked into its 3x3 box and row to narrow down candidates.`);
+        alert(`💡 Logical Guide: Examine Row ${r + 1}, Col ${c + 1}. Check its 3x3 box and intersecting row/column candidates.`);
         return;
       }
     }
   }
-
-  alert("💡 Logical Guide: The board is looking great! Check your remaining open cells.");
 }
 
 btnHint.addEventListener('click', openHintModal);
@@ -318,6 +357,7 @@ hintModal.addEventListener('click', (e) => {
 
 // Game Over Handlers
 btnGameoverMenu.addEventListener('click', () => {
+  clearSavedGame();
   gameoverModal.classList.add('hidden');
   showLandingScreen();
 });
@@ -325,7 +365,6 @@ btnGameoverMenu.addEventListener('click', () => {
 // --- TIMER ENGINE ---
 function startTimer() {
   clearInterval(timerInterval);
-  secondsElapsed = 0;
   isPaused = false;
   pausedBySettings = false;
   pauseOverlayEl.classList.add('hidden');
@@ -336,6 +375,7 @@ function startTimer() {
     if (!isPaused) {
       secondsElapsed++;
       updateTimerDisplay();
+      saveGameToStorage();
     }
   }, 1000);
 }
@@ -378,11 +418,17 @@ function hideAllScreens() {
 
 function showLandingScreen() {
   clearInterval(timerInterval);
+  saveGameToStorage();
   hideAllScreens();
+  checkActiveSaveStateOnLanding();
   landingScreenEl.classList.remove('hidden');
 }
 
 btnModeClassic.addEventListener('click', () => {
+  if (loadGameFromStorage()) {
+    if (!confirm("Starting a new game will forfeit your current active game. Continue?")) return;
+  }
+  clearSavedGame();
   activeStream = 'classic';
   selectedVariant = 'classic';
   hideAllScreens();
@@ -390,9 +436,20 @@ btnModeClassic.addEventListener('click', () => {
 });
 
 btnModeChallenge.addEventListener('click', () => {
+  if (loadGameFromStorage()) {
+    if (!confirm("Starting a new game will forfeit your current active game. Continue?")) return;
+  }
+  clearSavedGame();
   activeStream = 'challenge';
   hideAllScreens();
   challengeSelectScreenEl.classList.remove('hidden');
+});
+
+btnResumeSaved.addEventListener('click', () => {
+  const saved = loadGameFromStorage();
+  if (saved) {
+    resumeSavedGame(saved);
+  }
 });
 
 btnBackClassic.addEventListener('click', showLandingScreen);
@@ -428,9 +485,11 @@ document.querySelectorAll('.challenge-diff-btn').forEach(btn => {
 });
 
 function startNewGame() {
+  clearSavedGame();
   hintsRemaining = 5;
   hintCountEl.textContent = hintsRemaining;
   mistakesCount = 0;
+  secondsElapsed = 0;
   updateMistakesUI();
 
   hideAllScreens();
@@ -439,10 +498,34 @@ function startNewGame() {
   generateNewPuzzle();
   renderBoard();
   startTimer();
+  saveGameToStorage();
 
   if (selectedVariant !== 'classic') {
     openRules();
   }
+}
+
+function resumeSavedGame(saved) {
+  boardState = saved.boardState;
+  givensMask = saved.givensMask;
+  solutionMatrix = saved.solutionMatrix;
+  notesState = saved.notesState.map(row => row.map(arr => new Set(arr)));
+  colorsState = saved.colorsState;
+  thermometers = saved.thermometers || [];
+  secondsElapsed = saved.secondsElapsed || 0;
+  hintsRemaining = saved.hintsRemaining ?? 5;
+  mistakesCount = saved.mistakesCount || 0;
+  selectedVariant = saved.selectedVariant || 'classic';
+  selectedClues = saved.selectedClues || 34;
+
+  hintCountEl.textContent = hintsRemaining;
+  updateMistakesUI();
+
+  hideAllScreens();
+  gameScreenEl.classList.remove('hidden');
+  renderThermometersSVG();
+  renderBoard();
+  startTimer();
 }
 
 // --- THERMOMETER GENERATOR ENGINE ---
@@ -811,6 +894,7 @@ function renderBoard() {
           }
         }
         renderBoard();
+        saveGameToStorage();
       });
 
       boardEl.appendChild(cell);
@@ -841,6 +925,7 @@ function enterDigit(digit) {
         mistakesCount++;
         updateMistakesUI();
         if (mistakesCount >= maxMistakes) {
+          clearSavedGame();
           pauseGame();
           gameoverModal.classList.remove('hidden');
         }
@@ -876,6 +961,7 @@ function enterDigit(digit) {
   });
 
   renderBoard();
+  saveGameToStorage();
   if (digit !== 0 && currentMode === 'digit') checkAndTriggerCompletions(r, c);
 }
 
@@ -897,6 +983,7 @@ function undo() {
     selectedIdx = r * 9 + c;
   }
   renderBoard();
+  saveGameToStorage();
 }
 
 function setMode(mode) {
@@ -956,4 +1043,5 @@ window.addEventListener('keydown', (e) => {
 });
 
 initSettings();
+checkActiveSaveStateOnLanding();
 showLandingScreen();
