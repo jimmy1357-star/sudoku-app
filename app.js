@@ -11,8 +11,9 @@ const BASE_SOLUTION = [
 ];
 
 // State Variables
+let activeStream = 'classic'; // 'classic' or 'challenge'
 let selectedVariant = 'classic';
-let selectedClues = 34; // Medium default
+let selectedClues = 34; // Default Medium
 
 let solutionMatrix = [];
 let boardState = [];
@@ -39,11 +40,23 @@ let pausedBySettings = false;
 
 // DOM Elements - Screens
 const landingScreenEl = document.getElementById('landing-screen');
+const classicSelectScreenEl = document.getElementById('classic-select-screen');
+const challengeSelectScreenEl = document.getElementById('challenge-select-screen');
+const challengeDiffScreenEl = document.getElementById('challenge-diff-screen');
 const gameScreenEl = document.getElementById('game-screen');
-const startGameBtn = document.getElementById('btn-start-game');
+
+// Navigation Buttons
+const btnModeClassic = document.getElementById('btn-mode-classic');
+const btnModeChallenge = document.getElementById('btn-mode-challenge');
+
+const btnBackClassic = document.getElementById('btn-back-classic');
+const btnBackChallenge = document.getElementById('btn-back-challenge');
+const btnBackChallengeDiff = document.getElementById('btn-back-challenge-diff');
 const menuBtn = document.getElementById('btn-menu');
 
-// DOM Elements - Game Header & Board
+const challengeDiffTitle = document.getElementById('challenge-diff-title');
+
+// Game Board Elements
 const timerEl = document.getElementById('timer');
 const pauseBtn = document.getElementById('btn-pause');
 const pauseOverlayEl = document.getElementById('pause-overlay');
@@ -70,7 +83,12 @@ const toggleAutoErase = document.getElementById('toggle-auto-erase');
 const toggleDigitCounts = document.getElementById('toggle-digit-counts');
 const toggleHighlightErrors = document.getElementById('toggle-highlight-errors');
 
-// --- WEB AUDIO SYNTHESIZER (Ultra-Gentle Chime) ---
+// Stats Modal Elements
+const statsBtnLanding = document.getElementById('btn-landing-stats');
+const statsModal = document.getElementById('stats-modal');
+const closeStatsBtn = document.getElementById('btn-close-stats');
+
+// --- WEB AUDIO SYNTHESIZER ---
 let audioCtx = null;
 
 function playCompletionChime() {
@@ -155,9 +173,8 @@ toggleHighlightErrors.addEventListener('change', (e) => {
   renderBoard();
 });
 
-// Settings Modal Handlers with Auto-Pause
 function openSettings() {
-  if (!isPaused && !landingScreenEl.classList.contains('hidden')) {
+  if (!isPaused && gameScreenEl.classList.contains('hidden')) {
     pausedBySettings = false;
   } else if (!isPaused) {
     isPaused = true;
@@ -179,6 +196,13 @@ settingsBtnGame.addEventListener('click', openSettings);
 closeSettingsBtn.addEventListener('click', closeSettings);
 settingsModal.addEventListener('click', (e) => {
   if (e.target === settingsModal) closeSettings();
+});
+
+// Stats Modal Handlers
+statsBtnLanding.addEventListener('click', () => statsModal.classList.remove('hidden'));
+closeStatsBtn.addEventListener('click', () => statsModal.classList.add('hidden'));
+statsModal.addEventListener('click', (e) => {
+  if (e.target === statsModal) statsModal.classList.add('hidden');
 });
 
 // --- TIMER ENGINE ---
@@ -232,15 +256,71 @@ function togglePause() {
 pauseBtn.addEventListener('click', togglePause);
 resumeBtn.addEventListener('click', resumeGame);
 
-// --- SCREEN SWITCHING & GAME SETUP ---
+// --- NAVIGATION FLOW & SCREEN SWITCHING ---
+function hideAllScreens() {
+  landingScreenEl.classList.add('hidden');
+  classicSelectScreenEl.classList.add('hidden');
+  challengeSelectScreenEl.classList.add('hidden');
+  challengeDiffScreenEl.classList.add('hidden');
+  gameScreenEl.classList.add('hidden');
+}
+
 function showLandingScreen() {
   clearInterval(timerInterval);
-  gameScreenEl.classList.add('hidden');
+  hideAllScreens();
   landingScreenEl.classList.remove('hidden');
 }
 
+btnModeClassic.addEventListener('click', () => {
+  activeStream = 'classic';
+  selectedVariant = 'classic';
+  hideAllScreens();
+  classicSelectScreenEl.classList.remove('hidden');
+});
+
+btnModeChallenge.addEventListener('click', () => {
+  activeStream = 'challenge';
+  hideAllScreens();
+  challengeSelectScreenEl.classList.remove('hidden');
+});
+
+btnBackClassic.addEventListener('click', showLandingScreen);
+btnBackChallenge.addEventListener('click', showLandingScreen);
+btnBackChallengeDiff.addEventListener('click', () => {
+  hideAllScreens();
+  challengeSelectScreenEl.classList.remove('hidden');
+});
+menuBtn.addEventListener('click', showLandingScreen);
+
+// Classic difficulty buttons
+document.querySelectorAll('.diff-option-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    selectedClues = parseInt(btn.dataset.difficulty, 10);
+    startNewGame();
+  });
+});
+
+// Challenge variant buttons
+document.querySelectorAll('.variant-option-card:not(.disabled)').forEach(card => {
+  card.addEventListener('click', () => {
+    selectedVariant = card.dataset.variant;
+    const variantNames = { thermometer: 'Thermometer', knight: 'Knight Move', irregular: 'Irregular Jigsaw' };
+    challengeDiffTitle.textContent = variantNames[selectedVariant] || 'Challenge';
+    hideAllScreens();
+    challengeDiffScreenEl.classList.remove('hidden');
+  });
+});
+
+// Challenge difficulty buttons
+document.querySelectorAll('.challenge-diff-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    selectedClues = parseInt(btn.dataset.difficulty, 10);
+    startNewGame();
+  });
+});
+
 function startNewGame() {
-  landingScreenEl.classList.add('hidden');
+  hideAllScreens();
   gameScreenEl.classList.remove('hidden');
   
   generateNewPuzzle();
@@ -643,27 +723,6 @@ document.addEventListener('click', (e) => {
 });
 
 // --- EVENT LISTENERS ---
-startGameBtn.addEventListener('click', startNewGame);
-menuBtn.addEventListener('click', showLandingScreen);
-
-// Variant selection buttons on landing
-document.querySelectorAll('.variant-card:not(.disabled)').forEach(card => {
-  card.addEventListener('click', () => {
-    document.querySelectorAll('.variant-card').forEach(c => c.classList.remove('active'));
-    card.classList.add('active');
-    selectedVariant = card.dataset.variant;
-  });
-});
-
-// Difficulty selection buttons on landing
-document.querySelectorAll('.diff-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    selectedClues = parseInt(btn.dataset.difficulty, 10);
-  });
-});
-
 modeDigitBtn.addEventListener('click', () => setMode('digit'));
 modePencilBtn.addEventListener('click', () => setMode('pencil'));
 modeColorBtn.addEventListener('click', () => setMode('color'));
@@ -689,6 +748,8 @@ window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     if (!settingsModal.classList.contains('hidden')) {
       closeSettings();
+    } else if (!statsModal.classList.contains('hidden')) {
+      statsModal.classList.add('hidden');
     } else if (isPaused) {
       resumeGame();
     }

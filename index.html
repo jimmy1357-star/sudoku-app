@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Modern Sudoku</title>
+  <title>Pure Sudoku</title>
   
   <!-- PWA Manifest & Mobile Web App Capabilities -->
   <link rel="manifest" href="manifest.json">
@@ -17,57 +17,117 @@
 <body>
   <div class="app-container">
     
-    <!-- === LANDING PAGE SCREEN === -->
+    <!-- === SCREEN 1: MAIN LANDING === -->
     <div id="landing-screen" class="landing-screen">
       <div class="landing-header">
-        <h1>Sudoku Master</h1>
-        <p>Select your game mode and challenge</p>
+        <h1>Pure Sudoku</h1>
+        <p>Select your play style</p>
       </div>
 
-      <div class="landing-section">
-        <h2>Game Variant</h2>
-        <div class="variant-grid">
-          <button class="variant-card active" data-variant="classic">
-            <span class="var-icon">🧩</span>
-            <span class="var-title">Classic</span>
-            <span class="var-desc">Standard 9x9 Sudoku</span>
-          </button>
-          <button class="variant-card disabled" data-variant="thermometer">
-            <span class="var-icon">🌡️</span>
-            <span class="var-title">Thermometer</span>
-            <span class="var-desc">Strictly increasing bulbs</span>
-          </button>
-          <button class="variant-card disabled" data-variant="knight">
-            <span class="var-icon">♞</span>
-            <span class="var-title">Knight Move</span>
-            <span class="var-desc">Chess constraint rules</span>
-          </button>
-          <button class="variant-card disabled" data-variant="irregular">
-            <span class="var-icon">⚡</span>
-            <span class="var-title">Irregular</span>
-            <span class="var-desc">Jigsaw regions</span>
-          </button>
-        </div>
+      <div class="main-mode-grid">
+        <button id="btn-mode-classic" class="main-mode-card">
+          <span class="mode-icon">🧩</span>
+          <span class="mode-title">Classic</span>
+          <span class="mode-desc">Traditional 9x9 Sudoku grid</span>
+        </button>
+
+        <button id="btn-mode-challenge" class="main-mode-card challenge-tint">
+          <span class="mode-icon">⚔️</span>
+          <span class="mode-title">Challenge</span>
+          <span class="mode-desc">Advanced rules & variant grids</span>
+        </button>
       </div>
 
-      <div class="landing-section">
-        <h2>Difficulty</h2>
-        <div class="difficulty-grid">
-          <button class="diff-btn" data-difficulty="42">Easy</button>
-          <button class="diff-btn active" data-difficulty="34">Medium</button>
-          <button class="diff-btn" data-difficulty="26">Hard</button>
-          <button class="diff-btn" data-difficulty="22">Expert</button>
-        </div>
-      </div>
-
-      <button id="btn-start-game" class="btn btn-primary btn-lg">Start Game ▶</button>
-      
       <div class="landing-footer">
         <button id="btn-landing-settings" class="btn">⚙️ Settings</button>
+        <button id="btn-landing-stats" class="btn">📊 Stats</button>
       </div>
     </div>
 
-    <!-- === ACTIVE GAME SCREEN === -->
+    <!-- === SCREEN 2A: CLASSIC DIFFICULTY SELECT === -->
+    <div id="classic-select-screen" class="landing-screen hidden">
+      <div class="landing-header">
+        <button id="btn-back-classic" class="btn-back">← Back</button>
+        <h1>Classic Sudoku</h1>
+        <p>Select your difficulty level</p>
+      </div>
+
+      <div class="difficulty-stack">
+        <button class="diff-option-btn" data-difficulty="42">
+          <span class="diff-name">Easy</span>
+          <span class="diff-sub">42 Clues - Relaxed puzzle</span>
+        </button>
+        <button class="diff-option-btn" data-difficulty="34">
+          <span class="diff-name">Medium</span>
+          <span class="diff-sub">34 Clues - Balanced challenge</span>
+        </button>
+        <button class="diff-option-btn" data-difficulty="26">
+          <span class="diff-name">Hard</span>
+          <span class="diff-sub">26 Clues - Advanced logic</span>
+        </button>
+        <button class="diff-option-btn" data-difficulty="22">
+          <span class="diff-name">Expert</span>
+          <span class="diff-sub">22 Clues - Master level</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- === SCREEN 2B: CHALLENGE VARIANT SELECT === -->
+    <div id="challenge-select-screen" class="landing-screen hidden">
+      <div class="landing-header">
+        <button id="btn-back-challenge" class="btn-back">← Back</button>
+        <h1>Challenge Modes</h1>
+        <p>Pick a variant to play</p>
+      </div>
+
+      <div class="variant-stack">
+        <button class="variant-option-card disabled" data-variant="thermometer">
+          <span class="var-icon">🌡️</span>
+          <div class="var-info">
+            <span class="var-title">Thermometer</span>
+            <span class="var-desc">Digits strictly increase from bulb to tip</span>
+          </div>
+        </button>
+
+        <button class="variant-option-card disabled" data-variant="knight">
+          <span class="var-icon">♞</span>
+          <div class="var-info">
+            <span class="var-title">Knight Move</span>
+            <span class="var-desc">Identical digits cannot be a knight's move apart</span>
+          </div>
+        </button>
+
+        <button class="variant-option-card disabled" data-variant="irregular">
+          <span class="var-icon">⚡</span>
+          <div class="var-info">
+            <span class="var-title">Irregular / Jigsaw</span>
+            <span class="var-desc">Non-standard 9-cell jigsaw regions</span>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- === SCREEN 2C: CHALLENGE DIFFICULTY SELECT (Hard & Expert only) === -->
+    <div id="challenge-diff-screen" class="landing-screen hidden">
+      <div class="landing-header">
+        <button id="btn-back-challenge-diff" class="btn-back">← Back</button>
+        <h1 id="challenge-diff-title">Thermometer</h1>
+        <p>Select challenge difficulty</p>
+      </div>
+
+      <div class="difficulty-stack">
+        <button class="challenge-diff-btn" data-difficulty="26">
+          <span class="diff-name">Hard</span>
+          <span class="diff-sub">26 Clues + Variant Constraints</span>
+        </button>
+        <button class="challenge-diff-btn" data-difficulty="22">
+          <span class="diff-name">Expert</span>
+          <span class="diff-sub">22 Clues + Variant Constraints</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- === SCREEN 3: ACTIVE GAME BOARD === -->
     <div id="game-screen" class="game-screen hidden">
       <!-- Header Controls -->
       <header class="app-header">
@@ -176,6 +236,36 @@
             <input type="checkbox" id="toggle-highlight-errors">
             <span class="toggle-slider"></span>
           </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Overlay Modal (Placeholder for Future Stats Tracker) -->
+  <div id="stats-modal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>Player Statistics</h2>
+        <button id="btn-close-stats" class="btn-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="stat-box">
+          <span class="stat-number">0</span>
+          <span class="stat-label">Games Solved</span>
+        </div>
+        <div class="stat-row-dual">
+          <div class="stat-subcard">
+            <span class="stat-subnum">--:--</span>
+            <span class="stat-sublabel">Best Time</span>
+          </div>
+          <div class="stat-subcard">
+            <span class="stat-subnum">--:--</span>
+            <span class="stat-sublabel">Avg Time</span>
+          </div>
+        </div>
+        <div class="stat-box">
+          <span class="stat-number">100%</span>
+          <span class="stat-label">Win Rate</span>
         </div>
       </div>
     </div>
