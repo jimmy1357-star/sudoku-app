@@ -78,23 +78,25 @@ body {
   max-width: 420px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .app-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 6px;
+  width: 100%;
 }
 
 .timer-box {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .timer-display {
-  font-size: 1.4rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: var(--accent);
   font-variant-numeric: tabular-nums;
@@ -103,7 +105,7 @@ body {
 
 .header-controls {
   display: flex;
-  gap: 6px;
+  gap: 4px;
   align-items: center;
 }
 
@@ -111,26 +113,27 @@ body {
   background: var(--card-bg);
   color: var(--text-main);
   border: 1px solid var(--border-subtle);
-  padding: 6px 8px;
+  padding: 5px 6px;
   border-radius: 8px;
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.78rem;
 }
 
 .btn {
   background: var(--card-bg);
   color: var(--text-main);
   border: 1px solid var(--border-subtle);
-  padding: 6px 10px;
+  padding: 5px 8px;
   border-radius: 8px;
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .btn-icon {
-  font-size: 0.95rem;
-  padding: 6px 8px;
+  font-size: 0.85rem;
+  padding: 5px 7px;
 }
 
 .btn-primary {
@@ -147,7 +150,7 @@ body.light-mode .btn-primary {
 .game-area {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .sudoku-container {
@@ -218,7 +221,7 @@ body.light-mode .pause-overlay {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   font-weight: 700;
   cursor: pointer;
   position: relative;
@@ -305,7 +308,7 @@ body.light-mode .pause-overlay {
 }
 
 .pencil-digit {
-  font-size: 0.55rem;
+  font-size: 0.5rem;
   font-weight: 600;
   color: var(--text-muted);
   display: flex;
@@ -376,7 +379,7 @@ body.light-mode .mode-btn.active {
 .numpad {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
+  gap: 6px;
 }
 
 .num-btn {
@@ -385,9 +388,9 @@ body.light-mode .mode-btn.active {
   color: var(--text-main);
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   font-weight: 700;
-  padding: 12px 0;
+  padding: 10px 0;
   cursor: pointer;
   text-align: center;
   transition: opacity 0.2s ease, transform 0.1s ease;
@@ -399,9 +402,9 @@ body.light-mode .mode-btn.active {
 
 .digit-count {
   position: absolute;
-  top: 3px;
-  right: 5px;
-  font-size: 0.65rem;
+  top: 2px;
+  right: 4px;
+  font-size: 0.6rem;
   font-weight: 700;
   color: var(--accent);
   pointer-events: none;
