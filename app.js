@@ -165,7 +165,7 @@ function initSettings() {
   settingsShowCounts = localStorage.getItem('sudoku-show-counts') !== 'false';
   toggleDigitCounts.checked = settingsShowCounts;
 
-  settingsHighlightErrors = localStorage.getItem('sudoku-highlight-errors'] === 'true';
+  settingsHighlightErrors = localStorage.getItem('sudoku-highlight-errors') === 'true';
   toggleHighlightErrors.checked = settingsHighlightErrors;
   updateMistakesUI();
 }
@@ -265,10 +265,8 @@ function triggerHint() {
   hintCountEl.textContent = hintsRemaining;
   closeHintModal();
 
-  // Find a directional hint
   let hintGiven = false;
 
-  // 1. Check for active errors/conflicts first
   for (let r = 0; r < 9; r++) {
     for (let c = 0; c < 9; c++) {
       if (boardState[r][c] !== 0 && !givensMask[r][c] && hasConflict(r, c)) {
@@ -281,7 +279,6 @@ function triggerHint() {
     }
   }
 
-  // 2. Thermometer specific direction hint
   if (!hintGiven && selectedVariant === 'thermometer' && thermometers.length > 0) {
     const thermo = thermometers[Math.floor(Math.random() * thermometers.length)];
     const bulb = thermo[0];
@@ -292,7 +289,6 @@ function triggerHint() {
     return;
   }
 
-  // 3. General empty cell nudge
   if (!hintGiven) {
     for (let r = 0; r < 9; r++) {
       for (let c = 0; c < 9; c++) {
@@ -834,7 +830,6 @@ function enterDigit(digit) {
     boardState[r][c] = digit;
     notesState[r][c].clear();
 
-    // Check mistake tracking if error highlighting is enabled
     if (settingsHighlightErrors && digit !== 0) {
       if (hasConflict(r, c) || digit !== solutionMatrix[r][c]) {
         mistakesCount++;
