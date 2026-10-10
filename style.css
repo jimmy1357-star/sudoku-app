@@ -10,9 +10,9 @@
   --border-subtle: #334155;
   --border-strong: #94a3b8;
 
-  /* Thermometer Overlay Styling */
-  --thermo-bulb: rgba(148, 163, 184, 0.45);
-  --thermo-stem: rgba(148, 163, 184, 0.35);
+  /* Thermometer Overlay Styling - High Contrast */
+  --thermo-bulb: #64748b;
+  --thermo-stem: rgba(100, 116, 139, 0.65);
 
   /* Softer Highlight Tints (Dark Mode) */
   --highlight-tint: rgba(255, 255, 255, 0.04);
@@ -44,8 +44,8 @@ body.light-mode {
   --border-strong: #94a3b8;
 
   /* Thermometer Overlay (Light Mode) */
-  --thermo-bulb: rgba(100, 116, 139, 0.35);
-  --thermo-stem: rgba(100, 116, 139, 0.25);
+  --thermo-bulb: #94a3b8;
+  --thermo-stem: rgba(148, 163, 184, 0.65);
 
   /* Softer Highlight Tints (Light Mode) */
   --highlight-tint: rgba(0, 0, 0, 0.05);
@@ -376,6 +376,7 @@ body.light-mode .btn-primary {
   background: var(--border-strong);
 }
 
+/* FIX: High Z-Index & Pointer Passthrough for SVG Layer */
 .svg-overlay {
   position: absolute;
   top: 0;
@@ -383,7 +384,7 @@ body.light-mode .btn-primary {
   width: 100%;
   height: 100%;
   pointer-events: none;
-  z-index: 1;
+  z-index: 10;
 }
 
 .sudoku-board {
@@ -395,7 +396,7 @@ body.light-mode .btn-primary {
   width: 100%;
   height: 100%;
   position: relative;
-  z-index: 2;
+  z-index: 1;
 }
 
 /* Pause Overlay Screen */
@@ -428,7 +429,7 @@ body.light-mode .pause-overlay {
   letter-spacing: 1px;
 }
 
-/* Base Cell */
+/* Base Cell - Semi-Transparent Background to Let Thermometers Show */
 .cell {
   background: var(--card-bg);
   display: flex;
@@ -438,6 +439,7 @@ body.light-mode .pause-overlay {
   font-weight: 700;
   cursor: pointer;
   position: relative;
+  z-index: 2;
 }
 
 /* 3x3 Block Thicker Boundaries */
@@ -490,7 +492,7 @@ body.light-mode .pause-overlay {
   inset: 0;
   background-color: var(--completion-glow);
   pointer-events: none;
-  z-index: 10;
+  z-index: 20;
   animation: pulseFlash 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   animation-delay: calc(var(--delay-step, 0) * 0.06s);
 }
