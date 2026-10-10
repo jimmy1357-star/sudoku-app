@@ -157,6 +157,8 @@
           <button id="btn-pause" class="btn btn-icon" title="Pause Game">⏸</button>
         </div>
         <div class="header-controls">
+          <div id="mistakes-box" class="mistakes-box hidden">❌ <span id="mistakes-count">0</span>/3</div>
+          <button id="btn-hint" class="btn">💡 Hint (<span id="hint-count">5</span>)</button>
           <button id="btn-menu" class="btn btn-with-icon">
             <svg class="btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
@@ -220,6 +222,33 @@
       </main>
     </div>
 
+  </div>
+
+  <!-- Hint Modal Dialog -->
+  <div id="hint-modal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>💡 Directional Hint</h2>
+        <button id="btn-close-hint" class="btn-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <p id="hint-message" class="rules-text">Would you like a hint? You have [5] remaining.</p>
+        <button id="btn-confirm-hint" class="btn btn-primary" style="margin-top: 8px;">Get Direction</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Over Modal Dialog -->
+  <div id="gameover-modal" class="modal-backdrop hidden">
+    <div class="modal-card" style="text-align: center;">
+      <div class="modal-header" style="justify-content: center;">
+        <h2 style="color: var(--error-color);">❌ Game Over</h2>
+      </div>
+      <div class="modal-body">
+        <p class="rules-text">You have reached the maximum limit of 3 mistakes.</p>
+        <button id="btn-gameover-menu" class="btn btn-primary" style="margin-top: 8px;">Return to Menu</button>
+      </div>
+    </div>
   </div>
 
   <!-- Variant Rules Explanation Modal -->

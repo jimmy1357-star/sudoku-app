@@ -21,11 +21,16 @@ let givensMask = [];
 let notesState = [];
 let colorsState = [];
 let moveHistory = [];
-let thermometers = []; // Array of cell paths: [[ {r, c}, {r, c}, ... ]]
+let thermometers = []; 
 
 let selectedIdx = null;
-let currentMode = 'digit'; // 'digit', 'pencil', 'color'
+let currentMode = 'digit'; 
 let activeColor = 'c-blue';
+
+// Limits & Counters
+let hintsRemaining = 5;
+let mistakesCount = 0;
+const maxMistakes = 3;
 
 // Settings State
 let settingsSound = true;
@@ -74,6 +79,19 @@ const modeDigitBtn = document.getElementById('btn-mode-digit');
 const modePencilBtn = document.getElementById('btn-mode-pencil');
 const modeColorBtn = document.getElementById('btn-mode-color');
 const colorPaletteEl = document.getElementById('color-palette');
+
+// Hint & Mistakes Elements
+const btnHint = document.getElementById('btn-hint');
+const hintCountEl = document.getElementById('hint-count');
+const hintModal = document.getElementById('hint-modal');
+const closeHintBtn = document.getElementById('btn-close-hint');
+const confirmHintBtn = document.getElementById('btn-confirm-hint');
+const hintMessageEl = document.getElementById('hint-message');
+
+const mistakesBox = document.getElementById('mistakes-box');
+const mistakesCountEl = document.getElementById('mistakes-count');
+const gameoverModal = document.getElementById('gameover-modal');
+const btnGameoverMenu = document.getElementById('btn-gameover-menu');
 
 // Rules Modal Elements
 const rulesModal = document.getElementById('rules-modal');
@@ -128,9 +146,7 @@ function playCompletionChime() {
       osc.start(now + index * 0.1);
       osc.stop(now + index * 0.1 + 1.25);
     });
-  } catch (e) {
-    // Audio context not allowed or supported
-  }
+  } catch (e) {}
 }
 
 // --- SETTINGS ENGINE ---
@@ -149,8 +165,9 @@ function initSettings() {
   settingsShowCounts = localStorage.getItem('sudoku-show-counts') !== 'false';
   toggleDigitCounts.checked = settingsShowCounts;
 
-  settingsHighlightErrors = localStorage.getItem('sudoku-highlight-errors') === 'true';
+  settingsHighlightErrors = localStorage.getItem('sudoku-highlight-errors'] === 'true';
   toggleHighlightErrors.checked = settingsHighlightErrors;
+  updateMistakesUI();
 }
 
 toggleDarkMode.addEventListener('change', (e) => {
@@ -178,8 +195,14 @@ toggleDigitCounts.addEventListener('change', (e) => {
 toggleHighlightErrors.addEventListener('change', (e) => {
   settingsHighlightErrors = e.target.checked;
   localStorage.setItem('sudoku-highlight-errors', settingsHighlightErrors);
+  updateMistakesUI();
   renderBoard();
 });
+
+function updateMistakesUI() {
+  mistakesBox.classList.toggle('hidden', !settingsHighlightErrors);
+  mistakesCountEl.textContent = mistakesCount;
+}
 
 function openSettings() {
   if (!isPaused && gameScreenEl.classList.contains('hidden')) {
@@ -214,17 +237,88 @@ statsModal.addEventListener('click', (e) => {
 });
 
 // Rules Modal Handlers
-function openRules() {
-  rulesModal.classList.remove('hidden');
-}
-
-function closeRules() {
-  rulesModal.classList.add('hidden');
-}
-
+function openRules() { rulesModal.classList.remove('hidden'); }
+function closeRules() { rulesModal.classList.add('hidden'); }
 closeRulesBtn.addEventListener('click', closeRules);
 dismissRulesBtn.addEventListener('click', closeRules);
 btnRulesPause.addEventListener('click', openRules);
+
+// --- HINT ENGINE ---
+function openHintModal() {
+  if (hintsRemaining <= 0) {
+    hintMessageEl.textContent = "You have no hints remaining for this game!";
+    confirmHintBtn.style.display = 'none';
+  } else {
+    hintMessageEl.textContent = `Would you like a directional hint? You have [${hintsRemaining}] remaining.`;
+    confirmHintBtn.style.display = 'block';
+  }
+  hintModal.classList.remove('hidden');
+}
+
+function closeHintModal() {
+  hintModal.classList.add('hidden');
+}
+
+function triggerHint() {
+  if (hintsRemaining <= 0) return;
+  hintsRemaining--;
+  hintCountEl.textContent = hintsRemaining;
+  closeHintModal();
+
+  // Find a directional hint
+  let hintGiven = false;
+
+  // 1. Check for active errors/conflicts first
+  for (let r = 0; r < 9; r++) {
+    for (let c = 0; c < 9; c++) {
+      if (boardState[r][c] !== 0 && !givensMask[r][c] && hasConflict(r, c)) {
+        selectedIdx = r * 9 + c;
+        renderBoard();
+        alert(`💡 Directional Hint: Check cell at Row ${r + 1}, Col ${c + 1}—its current number creates a rule conflict.`);
+        hintGiven = true;
+        return;
+      }
+    }
+  }
+
+  // 2. Thermometer specific direction hint
+  if (!hintGiven && selectedVariant === 'thermometer' && thermometers.length > 0) {
+    const thermo = thermometers[Math.floor(Math.random() * thermometers.length)];
+    const bulb = thermo[0];
+    hintGiven = true;
+    selectedIdx = bulb.r * 9 + bulb.c;
+    renderBoard();
+    alert(`💡 Directional Hint: Trace the thermometer starting at Row ${bulb.r + 1}, Col ${bulb.c + 1} (bulb). Remember numbers must strictly increase from here!`);
+    return;
+  }
+
+  // 3. General empty cell nudge
+  if (!hintGiven) {
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        if (boardState[r][c] === 0) {
+          selectedIdx = r * 9 + c;
+          renderBoard();
+          alert(`💡 Directional Hint: Look around Row ${r + 1}, Col ${c + 1} to fill in missing possibilities.`);
+          return;
+        }
+      }
+    }
+  }
+}
+
+btnHint.addEventListener('click', openHintModal);
+closeHintBtn.addEventListener('click', closeHintModal);
+confirmHintBtn.addEventListener('click', triggerHint);
+hintModal.addEventListener('click', (e) => {
+  if (e.target === hintModal) closeHintModal();
+});
+
+// Game Over Handlers
+btnGameoverMenu.addEventListener('click', () => {
+  gameoverModal.classList.add('hidden');
+  showLandingScreen();
+});
 
 // --- TIMER ENGINE ---
 function startTimer() {
@@ -247,9 +341,7 @@ function startTimer() {
 function updateTimerDisplay() {
   const mins = Math.floor(secondsElapsed / 60);
   const secs = secondsElapsed % 60;
-  const formattedMins = String(mins).padStart(2, '0');
-  const formattedSecs = String(secs).padStart(2, '0');
-  timerEl.textContent = `${formattedMins}:${formattedSecs}`;
+  timerEl.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 }
 
 function pauseGame() {
@@ -267,17 +359,13 @@ function resumeGame() {
 }
 
 function togglePause() {
-  if (isPaused) {
-    resumeGame();
-  } else {
-    pauseGame();
-  }
+  if (isPaused) resumeGame(); else pauseGame();
 }
 
 pauseBtn.addEventListener('click', togglePause);
 resumeBtn.addEventListener('click', resumeGame);
 
-// --- NAVIGATION FLOW & SCREEN SWITCHING ---
+// --- NAVIGATION FLOW ---
 function hideAllScreens() {
   landingScreenEl.classList.add('hidden');
   classicSelectScreenEl.classList.add('hidden');
@@ -313,7 +401,6 @@ btnBackChallengeDiff.addEventListener('click', () => {
 });
 menuBtn.addEventListener('click', showLandingScreen);
 
-// Classic difficulty buttons
 document.querySelectorAll('.diff-option-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     selectedClues = parseInt(btn.dataset.difficulty, 10);
@@ -321,7 +408,6 @@ document.querySelectorAll('.diff-option-btn').forEach(btn => {
   });
 });
 
-// Challenge variant buttons
 document.querySelectorAll('.variant-option-card:not(.disabled)').forEach(card => {
   card.addEventListener('click', () => {
     selectedVariant = card.dataset.variant;
@@ -332,7 +418,6 @@ document.querySelectorAll('.variant-option-card:not(.disabled)').forEach(card =>
   });
 });
 
-// Challenge difficulty buttons
 document.querySelectorAll('.challenge-diff-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     selectedClues = parseInt(btn.dataset.difficulty, 10);
@@ -341,6 +426,11 @@ document.querySelectorAll('.challenge-diff-btn').forEach(btn => {
 });
 
 function startNewGame() {
+  hintsRemaining = 5;
+  hintCountEl.textContent = hintsRemaining;
+  mistakesCount = 0;
+  updateMistakesUI();
+
   hideAllScreens();
   gameScreenEl.classList.remove('hidden');
   
@@ -353,7 +443,7 @@ function startNewGame() {
   }
 }
 
-// --- ADVANCED THERMOMETER GENERATOR (Longer 7-8 Spans + Diagonals) ---
+// --- THERMOMETER GENERATOR ENGINE ---
 function generateThermometersForSolution() {
   thermometers = [];
   const occupiedCells = new Set();
@@ -376,7 +466,6 @@ function generateThermometersForSolution() {
     let currC = startC;
     let currVal = solutionMatrix[currR][currC];
 
-    // 35% chance for a long exciting thermometer (7 to 8 cells), otherwise 3 to 5 cells
     const isLong = Math.random() < 0.35;
     const targetLength = isLong ? (Math.floor(Math.random() * 2) + 7) : (Math.floor(Math.random() * 3) + 3);
 
@@ -427,7 +516,7 @@ function generateThermometersForSolution() {
   }
 }
 
-// --- RENDER THERMOMETER SVG OVERLAY ENGINE (Slim Stems) ---
+// --- RENDER THERMOMETER SVG ---
 function renderThermometersSVG() {
   svgOverlayEl.innerHTML = '';
   if (selectedVariant !== 'thermometer' || thermometers.length === 0) return;
@@ -442,17 +531,14 @@ function renderThermometersSVG() {
       path.forEach((pt, idx) => {
         const x = pt.c * cellSize + cellSize / 2;
         const y = pt.r * cellSize + cellSize / 2;
-        if (idx === 0) {
-          pathData += `M ${x} ${y}`;
-        } else {
-          pathData += ` L ${x} ${y}`;
-        }
+        if (idx === 0) pathData += `M ${x} ${y}`;
+        else pathData += ` L ${x} ${y}`;
       });
 
       const strokePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       strokePath.setAttribute('d', pathData);
       strokePath.setAttribute('stroke', 'var(--thermo-stem)');
-      strokePath.setAttribute('stroke-width', '2.8'); // Slimmer stem for crystal-clear readability
+      strokePath.setAttribute('stroke-width', '2.8');
       strokePath.setAttribute('fill', 'none');
       strokePath.setAttribute('stroke-linecap', 'round');
       strokePath.setAttribute('stroke-linejoin', 'round');
@@ -466,7 +552,7 @@ function renderThermometersSVG() {
     const bulbCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     bulbCircle.setAttribute('cx', bulbX);
     bulbCircle.setAttribute('cy', bulbY);
-    bulbCircle.setAttribute('r', '3.8'); // Proportionate slim bulb
+    bulbCircle.setAttribute('r', '3.8');
     bulbCircle.setAttribute('fill', 'var(--thermo-bulb)');
     bulbCircle.setAttribute('stroke', 'var(--border-strong)');
     bulbCircle.setAttribute('stroke-width', '0.5');
@@ -474,7 +560,7 @@ function renderThermometersSVG() {
   });
 }
 
-// --- PERMUTATION & CLUE GENERATOR ENGINE ---
+// --- PERMUTATION & CLUE GENERATOR ---
 function generateNewPuzzle() {
   const cluesCount = selectedClues;
   
@@ -519,7 +605,7 @@ function generateNewPuzzle() {
   renderThermometersSVG();
 }
 
-// --- RULE-BASED CONFLICT VALIDATION ENGINE ---
+// --- CONFLICT VALIDATION ENGINE ---
 function hasConflict(r, c) {
   const val = boardState[r][c];
   if (val === 0) return false;
@@ -561,50 +647,34 @@ function hasConflict(r, c) {
   return false;
 }
 
-// --- COMPLETION PULSE CHECK ENGINE ---
+// --- COMPLETION CHECK ---
 function checkAndTriggerCompletions(r, c) {
-  let rowSet = new Set();
-  let rowValid = true;
+  let rowSet = new Set(), rowValid = true;
   for (let i = 0; i < 9; i++) {
     const v = boardState[r][i];
-    if (v === 0 || rowSet.has(v) || hasConflict(r, i)) {
-      rowValid = false;
-      break;
-    }
+    if (v === 0 || rowSet.has(v) || hasConflict(r, i)) { rowValid = false; break; }
     rowSet.add(v);
   }
 
-  let colSet = new Set();
-  let colValid = true;
+  let colSet = new Set(), colValid = true;
   for (let i = 0; i < 9; i++) {
     const v = boardState[i][c];
-    if (v === 0 || colSet.has(v) || hasConflict(i, c)) {
-      colValid = false;
-      break;
-    }
+    if (v === 0 || colSet.has(v) || hasConflict(i, c)) { colValid = false; break; }
     colSet.add(v);
   }
 
-  let boxSet = new Set();
-  let boxValid = true;
-  const boxStartRow = Math.floor(r / 3) * 3;
-  const boxStartCol = Math.floor(c / 3) * 3;
-
+  let boxSet = new Set(), boxValid = true;
+  const boxStartRow = Math.floor(r / 3) * 3, boxStartCol = Math.floor(c / 3) * 3;
   for (let br = 0; br < 3; br++) {
     for (let bc = 0; bc < 3; bc++) {
-      const row = boxStartRow + br;
-      const col = boxStartCol + bc;
+      const row = boxStartRow + br, col = boxStartCol + bc;
       const v = boardState[row][col];
-      if (v === 0 || boxSet.has(v) || hasConflict(row, col)) {
-        boxValid = false;
-        break;
-      }
+      if (v === 0 || boxSet.has(v) || hasConflict(row, col)) { boxValid = false; break; }
       boxSet.add(v);
     }
   }
 
   let triggered = false;
-
   if (rowValid) {
     triggered = true;
     for (let col = 0; col < 9; col++) {
@@ -616,7 +686,6 @@ function checkAndTriggerCompletions(r, c) {
       }
     }
   }
-
   if (colValid) {
     triggered = true;
     for (let row = 0; row < 9; row++) {
@@ -628,13 +697,11 @@ function checkAndTriggerCompletions(r, c) {
       }
     }
   }
-
   if (boxValid) {
     triggered = true;
     for (let br = 0; br < 3; br++) {
       for (let bc = 0; bc < 3; bc++) {
-        const row = boxStartRow + br;
-        const col = boxStartCol + bc;
+        const row = boxStartRow + br, col = boxStartCol + bc;
         const cell = boardEl.children[row * 9 + col];
         if (cell) {
           const dist = Math.max(Math.abs(row - r), Math.abs(col - c));
@@ -645,41 +712,31 @@ function checkAndTriggerCompletions(r, c) {
       }
     }
   }
-
-  if (triggered) {
-    playCompletionChime();
-  }
+  if (triggered) playCompletionChime();
 }
 
-// --- REMAINING DIGIT COUNTER ENGINE ---
 function updateDigitCounts() {
   const counts = Array(10).fill(0);
   for (let r = 0; r < 9; r++) {
     for (let c = 0; c < 9; c++) {
       const val = boardState[r][c];
-      if (val >= 1 && val <= 9) {
-        counts[val]++;
-      }
+      if (val >= 1 && val <= 9) counts[val]++;
     }
   }
 
   document.querySelectorAll('.num-btn[data-value]').forEach(btn => {
     const digit = parseInt(btn.dataset.value, 10);
     if (digit === 0) return;
-
     const remaining = 9 - counts[digit];
     const countSpan = btn.querySelector('.digit-count');
-
     if (countSpan) {
       countSpan.textContent = remaining > 0 ? remaining : '';
       countSpan.style.display = settingsShowCounts && remaining > 0 ? 'inline' : 'none';
     }
-
     btn.classList.toggle('completed', remaining <= 0);
   });
 }
 
-// --- RENDER ENGINE ---
 function renderBoard() {
   boardEl.innerHTML = '';
   
@@ -695,9 +752,7 @@ function renderBoard() {
       cell.dataset.row = r;
       cell.dataset.col = c;
 
-      if (colorsState[r][c]) {
-        cell.classList.add(colorsState[r][c]);
-      }
+      if (colorsState[r][c]) cell.classList.add(colorsState[r][c]);
 
       const val = boardState[r][c];
 
@@ -717,24 +772,18 @@ function renderBoard() {
         for (let d = 1; d <= 9; d++) {
           const pencilCell = document.createElement('div');
           pencilCell.className = 'pencil-digit';
-          if (notesState[r][c].has(d)) {
-            pencilCell.textContent = d;
-          }
+          if (notesState[r][c].has(d)) pencilCell.textContent = d;
           pencilGrid.appendChild(pencilCell);
         }
         cell.appendChild(pencilGrid);
       }
 
-      // Highlights logic
       if (selectedIdx !== null) {
-        if (idx === selectedIdx) {
-          cell.classList.add('selected');
-        } else {
-          if (selectedVal !== 0 && val === selectedVal) {
-            cell.classList.add('same-number');
-          } else if (
-            r === selRow ||
-            c === selCol ||
+        if (idx === selectedIdx) cell.classList.add('selected');
+        else {
+          if (selectedVal !== 0 && val === selectedVal) cell.classList.add('same-number');
+          else if (
+            r === selRow || c === selCol ||
             (Math.floor(r / 3) === Math.floor(selRow / 3) && Math.floor(c / 3) === Math.floor(selCol / 3))
           ) {
             cell.classList.add('highlighted');
@@ -754,12 +803,7 @@ function renderBoard() {
             const newColor = activeColor === 'clear' ? null : activeColor;
             const prevColor = colorsState[r][c];
             if (prevColor !== newColor) {
-              moveHistory.push({
-                type: 'color',
-                r, c,
-                prevColor,
-                newColor
-              });
+              moveHistory.push({ type: 'color', r, c, prevColor, newColor });
               colorsState[r][c] = newColor;
             }
           }
@@ -774,7 +818,6 @@ function renderBoard() {
   updateDigitCounts();
 }
 
-// --- USER INPUT HANDLERS ---
 function enterDigit(digit) {
   if (selectedIdx === null || isPaused) return;
   const r = Math.floor(selectedIdx / 9);
@@ -791,39 +834,36 @@ function enterDigit(digit) {
     boardState[r][c] = digit;
     notesState[r][c].clear();
 
+    // Check mistake tracking if error highlighting is enabled
+    if (settingsHighlightErrors && digit !== 0) {
+      if (hasConflict(r, c) || digit !== solutionMatrix[r][c]) {
+        mistakesCount++;
+        updateMistakesUI();
+        if (mistakesCount >= maxMistakes) {
+          pauseGame();
+          gameoverModal.classList.remove('hidden');
+        }
+      }
+    }
+
     if (settingsAutoErase && digit !== 0) {
       const boxStartRow = Math.floor(r / 3) * 3;
       const boxStartCol = Math.floor(c / 3) * 3;
-
       for (let i = 0; i < 9; i++) {
-        if (notesState[r][i].has(digit)) {
-          notesState[r][i].delete(digit);
-          autoErasedNotes.push({ r, c: i, digit });
-        }
-        if (notesState[i][c].has(digit)) {
-          notesState[i][c].delete(digit);
-          autoErasedNotes.push({ r: i, c, digit });
-        }
+        if (notesState[r][i].has(digit)) { notesState[r][i].delete(digit); autoErasedNotes.push({ r, c: i, digit }); }
+        if (notesState[i][c].has(digit)) { notesState[i][c].delete(digit); autoErasedNotes.push({ r: i, c, digit }); }
       }
       for (let br = 0; br < 3; br++) {
         for (let bc = 0; bc < 3; bc++) {
-          const row = boxStartRow + br;
-          const col = boxStartCol + bc;
-          if (notesState[row][col].has(digit)) {
-            notesState[row][col].delete(digit);
-            autoErasedNotes.push({ r: row, c: col, digit });
-          }
+          const row = boxStartRow + br, col = boxStartCol + bc;
+          if (notesState[row][col].has(digit)) { notesState[row][col].delete(digit); autoErasedNotes.push({ r: row, c: col, digit }); }
         }
       }
     }
-
   } else if (currentMode === 'pencil' && digit !== 0) {
     boardState[r][c] = 0;
-    if (notesState[r][c].has(digit)) {
-      notesState[r][c].delete(digit);
-    } else {
-      notesState[r][c].add(digit);
-    }
+    if (notesState[r][c].has(digit)) notesState[r][c].delete(digit);
+    else notesState[r][c].add(digit);
   } else if (digit === 0) {
     if (prevVal === 0 && prevNotes.size === 0) return;
     boardState[r][c] = 0;
@@ -831,37 +871,23 @@ function enterDigit(digit) {
   }
 
   moveHistory.push({
-    type: 'cell',
-    r, c,
-    prevVal,
-    newVal: boardState[r][c],
-    prevNotes,
-    newNotes: new Set(notesState[r][c]),
-    autoErasedNotes
+    type: 'cell', r, c, prevVal, newVal: boardState[r][c], prevNotes, newNotes: new Set(notesState[r][c]), autoErasedNotes
   });
 
   renderBoard();
-
-  if (digit !== 0 && currentMode === 'digit') {
-    checkAndTriggerCompletions(r, c);
-  }
+  if (digit !== 0 && currentMode === 'digit') checkAndTriggerCompletions(r, c);
 }
 
-// --- UNDO ENGINE ---
 function undo() {
   if (moveHistory.length === 0 || isPaused) return;
-
   const lastMove = moveHistory.pop();
 
   if (lastMove.type === 'cell') {
     const { r, c } = lastMove;
     boardState[r][c] = lastMove.prevVal;
     notesState[r][c] = new Set(lastMove.prevNotes);
-
-    if (lastMove.autoErasedNotes && lastMove.autoErasedNotes.length > 0) {
-      lastMove.autoErasedNotes.forEach(item => {
-        notesState[item.r][item.c].add(item.digit);
-      });
+    if (lastMove.autoErasedNotes) {
+      lastMove.autoErasedNotes.forEach(item => notesState[item.r][item.c].add(item.digit));
     }
     selectedIdx = r * 9 + c;
   } else if (lastMove.type === 'color') {
@@ -869,7 +895,6 @@ function undo() {
     colorsState[r][c] = lastMove.prevColor;
     selectedIdx = r * 9 + c;
   }
-
   renderBoard();
 }
 
@@ -881,19 +906,15 @@ function setMode(mode) {
   colorPaletteEl.classList.toggle('hidden', mode !== 'color');
 }
 
-// --- GLOBAL CLICK OUTSIDE LISTENER ---
 document.addEventListener('click', (e) => {
   const isCell = e.target.closest('.cell');
   const isButton = e.target.closest('button, select, .color-swatch, .modal-card');
-  if (!isCell && !isButton) {
-    if (selectedIdx !== null) {
-      selectedIdx = null;
-      renderBoard();
-    }
+  if (!isCell && !isButton && selectedIdx !== null) {
+    selectedIdx = null;
+    renderBoard();
   }
 });
 
-// --- EVENT LISTENERS ---
 modeDigitBtn.addEventListener('click', () => setMode('digit'));
 modePencilBtn.addEventListener('click', () => setMode('pencil'));
 modeColorBtn.addEventListener('click', () => setMode('color'));
@@ -917,15 +938,11 @@ undoBtn.addEventListener('click', undo);
 
 window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
-    if (!settingsModal.classList.contains('hidden')) {
-      closeSettings();
-    } else if (!statsModal.classList.contains('hidden')) {
-      statsModal.classList.add('hidden');
-    } else if (!rulesModal.classList.contains('hidden')) {
-      closeRules();
-    } else if (isPaused) {
-      resumeGame();
-    }
+    if (!settingsModal.classList.contains('hidden')) closeSettings();
+    else if (!statsModal.classList.contains('hidden')) statsModal.classList.add('hidden');
+    else if (!rulesModal.classList.contains('hidden')) closeRules();
+    else if (!hintModal.classList.contains('hidden')) closeHintModal();
+    else if (isPaused) resumeGame();
     return;
   }
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {

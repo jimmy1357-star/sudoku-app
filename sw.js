@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sudoku-v10';
+const CACHE_NAME = 'sudoku-v11';
 const ASSETS = [
   './',
   './index.html',
@@ -7,25 +7,19 @@ const ASSETS = [
   './manifest.json'
 ];
 
-// Install Event - Cache Core Assets
 self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS);
-    })
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
   );
   self.skipWaiting();
 });
 
-// Activate Event - Clean Up Old Caches
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((key) => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
+          if (key !== CACHE_NAME) return caches.delete(key);
         })
       );
     })
@@ -33,25 +27,16 @@ self.addEventListener('activate', (e) => {
   self.clients.claim();
 });
 
-// Fetch Event - Serve from Cache when Offline
 self.addEventListener('fetch', (e) => {
   e.respondWith(
     caches.match(e.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
+      if (cachedResponse) return cachedResponse;
       return fetch(e.request).then((response) => {
-        if (!response || response.status !== 200 || response.type !== 'basic') {
-          return response;
-        }
+        if (!response || response.status !== 200 || response.type !== 'basic') return response;
         const responseToCache = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(e.request, responseToCache);
-        });
+        caches.open(CACHE_NAME).then((cache) => cache.put(e.request, responseToCache));
         return response;
       });
-    }).catch(() => {
-      return caches.match('./index.html');
-    })
+    }).catch(() => caches.match('./index.html'))
   );
 });

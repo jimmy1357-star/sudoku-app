@@ -112,6 +112,22 @@ body {
   color: currentColor;
 }
 
+/* Mistakes Strike Counter Badge */
+.mistakes-box {
+  background: rgba(248, 113, 113, 0.15);
+  color: var(--error-color);
+  border: 1px solid var(--error-color);
+  padding: 5px 8px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.mistakes-box.hidden {
+  display: none;
+}
+
 /* === LANDING SCREEN STYLES === */
 .landing-screen {
   display: flex;
@@ -376,7 +392,6 @@ body.light-mode .btn-primary {
   background: var(--border-strong);
 }
 
-/* FIX: High Z-Index & Pointer Passthrough for SVG Layer */
 .svg-overlay {
   position: absolute;
   top: 0;
@@ -429,7 +444,7 @@ body.light-mode .pause-overlay {
   letter-spacing: 1px;
 }
 
-/* Base Cell - Semi-Transparent Background to Let Thermometers Show */
+/* Base Cell */
 .cell {
   background: var(--card-bg);
   display: flex;
@@ -638,7 +653,7 @@ body.light-mode .mode-btn.active {
   gap: 8px;
 }
 
-/* Modals (Settings, Stats, Rules) */
+/* Modals (Settings, Stats, Rules, Hint, GameOver) */
 .modal-backdrop {
   position: fixed;
   inset: 0;
