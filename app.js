@@ -44,7 +44,7 @@ let secondsElapsed = 0;
 let isPaused = false;
 let pausedBySettings = false;
 
-// DOM Element References (Initialized on DOMContentLoaded)
+// DOM Element References
 let landingScreenEl, classicSelectScreenEl, challengeSelectScreenEl, challengeDiffScreenEl, gameScreenEl;
 let btnModeClassic, btnModeChallenge, btnResumeSaved, resumeDesc;
 let btnBackClassic, btnBackChallenge, btnBackChallengeDiff, menuBtn;
@@ -129,11 +129,18 @@ function initDOMReferences() {
 // --- PERSISTENT SAVE STATE ENGINE ---
 function saveGameToStorage() {
   try {
+    if (!boardState || boardState.length === 0) return;
+
+    // Convert notesState Set objects to plain Arrays for JSON serialization
+    const serializableNotes = notesState.map(row => 
+      row.map(cellSet => (cellSet instanceof Set ? Array.from(cellSet) : Array.isArray(cellSet) ? cellSet : []))
+    );
+
     const gameState = {
       boardState,
       givensMask,
       solutionMatrix,
-      notesState: notesState.map(row => row.map(set => Array.from(set))),
+      notesState: serializableNotes,
       colorsState,
       thermometers,
       secondsElapsed,
@@ -143,7 +150,9 @@ function saveGameToStorage() {
       selectedClues
     };
     localStorage.setItem('sudoku-active-game', JSON.stringify(gameState));
-  } catch (e) {}
+  } catch (e) {
+    console.error('Failed to save game state:', e);
+  }
 }
 
 function loadGameFromStorage() {
@@ -164,7 +173,7 @@ function clearSavedGame() {
 function checkActiveSaveStateOnLanding() {
   try {
     const saved = loadGameFromStorage();
-    if (saved && btnResumeSaved && resumeDesc) {
+    if (saved && saved.boardState && saved.boardState.length === 9 && btnResumeSaved && resumeDesc) {
       btnResumeSaved.classList.remove('hidden');
       const modeName = saved.selectedVariant === 'classic' ? 'Classic' : `Challenge (${saved.selectedVariant})`;
       resumeDesc.textContent = `${modeName} — Time: ${Math.floor((saved.secondsElapsed || 0) / 60)}m ${(saved.secondsElapsed || 0) % 60}s`;
@@ -609,9 +618,14 @@ function resumeSavedGame(saved) {
   givensMask = saved.givensMask && saved.givensMask.length === 9 ? saved.givensMask : Array.from({ length: 9 }, () => Array(9).fill(false));
   solutionMatrix = saved.solutionMatrix && saved.solutionMatrix.length === 9 ? saved.solutionMatrix : BASE_SOLUTION;
   
-  notesState = saved.notesState && saved.notesState.length === 9 
-    ? saved.notesState.map(row => row.map(arr => new Set(arr || []))) 
-    : Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => new Set()));
+  // Convert restored Array back to Set objects for notesState
+  if (saved.notesState && saved.notesState.length === 9) {
+    notesState = saved.notesState.map(row => 
+      row.map(cellArr => new Set(Array.isArray(cellArr) ? cellArr : []))
+    );
+  } else {
+    notesState = Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => new Set()));
+  }
     
   colorsState = saved.colorsState && saved.colorsState.length === 9 ? saved.colorsState : Array.from({ length: 9 }, () => Array(9).fill(null));
   thermometers = saved.thermometers || [];
@@ -952,7 +966,7 @@ function renderBoard() {
             cell.classList.add('error');
           }
         }
-      } else if (notesState[r][c].size > 0) {
+      } else if (notesState[r] && notesState[r][c] && notesState[r][c].size > 0) {
         const pencilGrid = document.createElement('div');
         pencilGrid.className = 'pencil-grid';
         for (let d = 1; d <= 9; d++) {

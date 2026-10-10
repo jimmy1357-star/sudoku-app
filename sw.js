@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sudoku-v22';
+const CACHE_NAME = 'sudoku-v23';
 const ASSETS = [
   './',
   './index.html',
