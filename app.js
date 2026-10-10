@@ -726,7 +726,7 @@ function generateThermometersForSolution() {
   }
 }
 
-// --- UNIFIED SEAMLESS THERMOMETER SVG RENDERER ---
+// --- SINGLE-PATH THIN SEAMLESS THERMOMETER RENDERER ---
 function renderThermometersSVG() {
   if (!svgOverlayEl) return;
   svgOverlayEl.innerHTML = '';
@@ -741,7 +741,6 @@ function renderThermometersSVG() {
     const bulbX = bulbPt.c * cellSize + cellSize / 2;
     const bulbY = bulbPt.r * cellSize + cellSize / 2;
 
-    // Build seamless path string starting right from the bulb center
     let pathData = `M ${bulbX} ${bulbY}`;
     path.forEach((pt) => {
       const x = pt.c * cellSize + cellSize / 2;
@@ -749,23 +748,14 @@ function renderThermometersSVG() {
       pathData += ` L ${x} ${y}`;
     });
 
-    // Glass stem outline
-    const glassPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    glassPath.setAttribute('d', pathData);
-    glassPath.setAttribute('stroke', 'var(--thermo-stem)');
-    glassPath.setAttribute('stroke-width', '4.2');
-    glassPath.setAttribute('fill', 'none');
-    glassPath.setAttribute('stroke-linecap', 'round');
-    glassPath.setAttribute('stroke-linejoin', 'round');
-    svgOverlayEl.appendChild(glassPath);
-
-    // Seamless bulb circle matching the stem width exactly
-    const bulbCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    bulbCircle.setAttribute('cx', bulbX);
-    bulbCircle.setAttribute('cy', bulbY);
-    bulbCircle.setAttribute('r', '4.2');
-    bulbCircle.setAttribute('fill', 'var(--thermo-stem)');
-    svgOverlayEl.appendChild(bulbCircle);
+    const thermoPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    thermoPath.setAttribute('d', pathData);
+    thermoPath.setAttribute('stroke', 'var(--thermo-stem)');
+    thermoPath.setAttribute('stroke-width', '2.4');
+    thermoPath.setAttribute('fill', 'none');
+    thermoPath.setAttribute('stroke-linecap', 'round');
+    thermoPath.setAttribute('stroke-linejoin', 'round');
+    svgOverlayEl.appendChild(thermoPath);
   });
 }
 
