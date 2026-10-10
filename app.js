@@ -62,7 +62,7 @@ const toggleAutoErase = document.getElementById('toggle-auto-erase');
 const toggleDigitCounts = document.getElementById('toggle-digit-counts');
 const toggleHighlightErrors = document.getElementById('toggle-highlight-errors');
 
-// --- WEB AUDIO SYNTHESIZER ---
+// --- WEB AUDIO SYNTHESIZER (Ultra-Gentle Chime) ---
 let audioCtx = null;
 
 function playCompletionChime() {
@@ -77,23 +77,23 @@ function playCompletionChime() {
 
     const now = audioCtx.currentTime;
     
-    // Play a gentle two-note arpeggio chime (E5 -> B5)
-    [523.25, 659.25, 783.99].forEach((freq, index) => {
+    // Play a delicate, ethereal high-register arpeggio (G5, B5, D6) with a very soft decay
+    [783.99, 987.77, 1174.66].forEach((freq, index) => {
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
 
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, now + index * 0.08);
+      osc.frequency.setValueAtTime(freq, now + index * 0.1);
 
-      gain.gain.setValueAtTime(0, now + index * 0.08);
-      gain.gain.linearRampToValueAtTime(0.12, now + index * 0.08 + 0.03);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + index * 0.08 + 0.7);
+      gain.gain.setValueAtTime(0, now + index * 0.1);
+      gain.gain.linearRampToValueAtTime(0.06, now + index * 0.1 + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + index * 0.1 + 1.2);
 
       osc.connect(gain);
       gain.connect(audioCtx.destination);
 
-      osc.start(now + index * 0.08);
-      osc.stop(now + index * 0.08 + 0.75);
+      osc.start(now + index * 0.1);
+      osc.stop(now + index * 0.1 + 1.25);
     });
   } catch (e) {
     // Audio context not allowed or supported
