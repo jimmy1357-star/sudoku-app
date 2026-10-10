@@ -353,24 +353,22 @@ function startNewGame() {
   }
 }
 
-// --- ADVANCED THERMOMETER GENERATOR (Diagonal + Non-Parallel Separation) ---
+// --- ADVANCED THERMOMETER GENERATOR (Longer 7-8 Spans + Diagonals) ---
 function generateThermometersForSolution() {
   thermometers = [];
-  const occupiedCells = new Set(); // Stores "r,c" for strict path tracking
+  const occupiedCells = new Set();
   const targetCount = selectedClues === 0 ? 5 : 4; 
 
-  // Orthogonal + Diagonal Directions
   const directions = [
     { dr: -1, dc: 0 }, { dr: 1, dc: 0 }, { dr: 0, dc: -1 }, { dr: 0, dc: 1 },
     { dr: -1, dc: -1 }, { dr: -1, dc: 1 }, { dr: 1, dc: -1 }, { dr: 1, dc: 1 }
   ];
 
-  for (let attempt = 0; attempt < 100 && thermometers.length < targetCount; attempt++) {
+  for (let attempt = 0; attempt < 120 && thermometers.length < targetCount; attempt++) {
     const startR = Math.floor(Math.random() * 9);
     const startC = Math.floor(Math.random() * 9);
     const key = `${startR},${startC}`;
 
-    // Ensure bulbs don't crowd together
     if (occupiedCells.has(key)) continue;
 
     const path = [{ r: startR, c: startC }];
@@ -378,7 +376,9 @@ function generateThermometersForSolution() {
     let currC = startC;
     let currVal = solutionMatrix[currR][currC];
 
-    const targetLength = Math.floor(Math.random() * 3) + 3; // Length 3 to 5
+    // 35% chance for a long exciting thermometer (7 to 8 cells), otherwise 3 to 5 cells
+    const isLong = Math.random() < 0.35;
+    const targetLength = isLong ? (Math.floor(Math.random() * 2) + 7) : (Math.floor(Math.random() * 3) + 3);
 
     for (let step = 0; step < targetLength - 1; step++) {
       const validNeighbors = [];
@@ -386,8 +386,6 @@ function generateThermometersForSolution() {
         const nr = currR + d.dr;
         const nc = currC + d.dc;
         if (nr >= 0 && nr < 9 && nc >= 0 && nc < 9) {
-          const nKey = `${nr},${nc}`;
-          // No self-crossing and prevent running parallel/adjacent to existing paths
           if (!path.some(p => p.r === nr && p.c === nc)) {
             const nextVal = solutionMatrix[nr][nc];
             if (nextVal > currVal) {
@@ -409,7 +407,6 @@ function generateThermometersForSolution() {
     }
 
     if (path.length >= 3) {
-      // Check if this path runs parallel side-by-side with another path
       let tooClose = false;
       for (const existingPath of thermometers) {
         for (const p1 of path) {
@@ -430,7 +427,7 @@ function generateThermometersForSolution() {
   }
 }
 
-// --- RENDER THERMOMETER SVG OVERLAY ENGINE ---
+// --- RENDER THERMOMETER SVG OVERLAY ENGINE (Slim Stems) ---
 function renderThermometersSVG() {
   svgOverlayEl.innerHTML = '';
   if (selectedVariant !== 'thermometer' || thermometers.length === 0) return;
@@ -455,7 +452,7 @@ function renderThermometersSVG() {
       const strokePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       strokePath.setAttribute('d', pathData);
       strokePath.setAttribute('stroke', 'var(--thermo-stem)');
-      strokePath.setAttribute('stroke-width', '4.5');
+      strokePath.setAttribute('stroke-width', '2.8'); // Slimmer stem for crystal-clear readability
       strokePath.setAttribute('fill', 'none');
       strokePath.setAttribute('stroke-linecap', 'round');
       strokePath.setAttribute('stroke-linejoin', 'round');
@@ -469,10 +466,10 @@ function renderThermometersSVG() {
     const bulbCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     bulbCircle.setAttribute('cx', bulbX);
     bulbCircle.setAttribute('cy', bulbY);
-    bulbCircle.setAttribute('r', '4.2');
+    bulbCircle.setAttribute('r', '3.8'); // Proportionate slim bulb
     bulbCircle.setAttribute('fill', 'var(--thermo-bulb)');
     bulbCircle.setAttribute('stroke', 'var(--border-strong)');
-    bulbCircle.setAttribute('stroke-width', '0.6');
+    bulbCircle.setAttribute('stroke-width', '0.5');
     svgOverlayEl.appendChild(bulbCircle);
   });
 }
