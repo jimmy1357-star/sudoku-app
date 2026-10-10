@@ -118,20 +118,22 @@ const closeStatsBtn = document.getElementById('btn-close-stats');
 
 // --- PERSISTENT SAVE STATE ENGINE ---
 function saveGameToStorage() {
-  const gameState = {
-    boardState,
-    givensMask,
-    solutionMatrix,
-    notesState: notesState.map(row => row.map(set => Array.from(set))),
-    colorsState,
-    thermometers,
-    secondsElapsed,
-    hintsRemaining,
-    mistakesCount,
-    selectedVariant,
-    selectedClues
-  };
-  localStorage.setItem('sudoku-active-game', JSON.stringify(gameState));
+  try {
+    const gameState = {
+      boardState,
+      givensMask,
+      solutionMatrix,
+      notesState: notesState.map(row => row.map(set => Array.from(set))),
+      colorsState,
+      thermometers,
+      secondsElapsed,
+      hintsRemaining,
+      mistakesCount,
+      selectedVariant,
+      selectedClues
+    };
+    localStorage.setItem('sudoku-active-game', JSON.stringify(gameState));
+  } catch (e) {}
 }
 
 function loadGameFromStorage() {
@@ -140,6 +142,7 @@ function loadGameFromStorage() {
   try {
     return JSON.parse(saved);
   } catch (e) {
+    clearSavedGame();
     return null;
   }
 }
@@ -149,13 +152,18 @@ function clearSavedGame() {
 }
 
 function checkActiveSaveStateOnLanding() {
-  const saved = loadGameFromStorage();
-  if (saved) {
-    btnResumeSaved.classList.remove('hidden');
-    const modeName = saved.selectedVariant === 'classic' ? 'Classic' : `Challenge (${saved.selectedVariant})`;
-    resumeDesc.textContent = `${modeName} — Time: ${Math.floor(saved.secondsElapsed / 60)}m ${saved.secondsElapsed % 60}s`;
-  } else {
-    btnResumeSaved.classList.add('hidden');
+  try {
+    const saved = loadGameFromStorage();
+    if (saved && btnResumeSaved && resumeDesc) {
+      btnResumeSaved.classList.remove('hidden');
+      const modeName = saved.selectedVariant === 'classic' ? 'Classic' : `Challenge (${saved.selectedVariant})`;
+      resumeDesc.textContent = `${modeName} — Time: ${Math.floor((saved.secondsElapsed || 0) / 60)}m ${(saved.secondsElapsed || 0) % 60}s`;
+    } else if (btnResumeSaved) {
+      btnResumeSaved.classList.add('hidden');
+    }
+  } catch (e) {
+    clearSavedGame();
+    if (btnResumeSaved) btnResumeSaved.classList.add('hidden');
   }
 }
 
@@ -196,57 +204,71 @@ function playCompletionChime() {
 
 // --- SETTINGS ENGINE ---
 function initSettings() {
-  const savedTheme = localStorage.getItem('sudoku-theme');
-  const isDark = savedTheme !== 'light';
-  document.body.classList.toggle('light-mode', !isDark);
-  toggleDarkMode.checked = isDark;
+  try {
+    const savedTheme = localStorage.getItem('sudoku-theme');
+    const isDark = savedTheme !== 'light';
+    document.body.classList.toggle('light-mode', !isDark);
+    if (toggleDarkMode) toggleDarkMode.checked = isDark;
 
-  settingsSound = localStorage.getItem('sudoku-sound') !== 'false';
-  toggleSound.checked = settingsSound;
+    settingsSound = localStorage.getItem('sudoku-sound') !== 'false';
+    if (toggleSound) toggleSound.checked = settingsSound;
 
-  settingsAutoErase = localStorage.getItem('sudoku-auto-erase') !== 'false';
-  toggleAutoErase.checked = settingsAutoErase;
+    settingsAutoErase = localStorage.getItem('sudoku-auto-erase') !== 'false';
+    if (toggleAutoErase) toggleAutoErase.checked = settingsAutoErase;
 
-  settingsShowCounts = localStorage.getItem('sudoku-show-counts') !== 'false';
-  toggleDigitCounts.checked = settingsShowCounts;
+    settingsShowCounts = localStorage.getItem('sudoku-show-counts') !== 'false';
+    if (toggleDigitCounts) toggleDigitCounts.checked = settingsShowCounts;
 
-  settingsHighlightErrors = localStorage.getItem('sudoku-highlight-errors') === 'true';
-  toggleHighlightErrors.checked = settingsHighlightErrors;
-  updateMistakesUI();
+    settingsHighlightErrors = localStorage.getItem('sudoku-highlight-errors') === 'true';
+    if (toggleHighlightErrors) toggleHighlightErrors.checked = settingsHighlightErrors;
+    updateMistakesUI();
+  } catch (e) {}
 }
 
-toggleDarkMode.addEventListener('change', (e) => {
-  const isDark = e.target.checked;
-  document.body.classList.toggle('light-mode', !isDark);
-  localStorage.setItem('sudoku-theme', isDark ? 'dark' : 'light');
-});
+if (toggleDarkMode) {
+  toggleDarkMode.addEventListener('change', (e) => {
+    const isDark = e.target.checked;
+    document.body.classList.toggle('light-mode', !isDark);
+    localStorage.setItem('sudoku-theme', isDark ? 'dark' : 'light');
+  });
+}
 
-toggleSound.addEventListener('change', (e) => {
-  settingsSound = e.target.checked;
-  localStorage.setItem('sudoku-sound', settingsSound);
-});
+if (toggleSound) {
+  toggleSound.addEventListener('change', (e) => {
+    settingsSound = e.target.checked;
+    localStorage.setItem('sudoku-sound', settingsSound);
+  });
+}
 
-toggleAutoErase.addEventListener('change', (e) => {
-  settingsAutoErase = e.target.checked;
-  localStorage.setItem('sudoku-auto-erase', settingsAutoErase);
-});
+if (toggleAutoErase) {
+  toggleAutoErase.addEventListener('change', (e) => {
+    settingsAutoErase = e.target.checked;
+    localStorage.setItem('sudoku-auto-erase', settingsAutoErase);
+  });
+}
 
-toggleDigitCounts.addEventListener('change', (e) => {
-  settingsShowCounts = e.target.checked;
-  localStorage.setItem('sudoku-show-counts', settingsShowCounts);
-  updateDigitCounts();
-});
+if (toggleDigitCounts) {
+  toggleDigitCounts.addEventListener('change', (e) => {
+    settingsShowCounts = e.target.checked;
+    localStorage.setItem('sudoku-show-counts', settingsShowCounts);
+    updateDigitCounts();
+  });
+}
 
-toggleHighlightErrors.addEventListener('change', (e) => {
-  settingsHighlightErrors = e.target.checked;
-  localStorage.setItem('sudoku-highlight-errors', settingsHighlightErrors);
-  updateMistakesUI();
-  renderBoard();
-});
+if (toggleHighlightErrors) {
+  toggleHighlightErrors.addEventListener('change', (e) => {
+    settingsHighlightErrors = e.target.checked;
+    localStorage.setItem('sudoku-highlight-errors', settingsHighlightErrors);
+    updateMistakesUI();
+    renderBoard();
+  });
+}
 
 function updateMistakesUI() {
-  mistakesBox.classList.toggle('hidden', !settingsHighlightErrors);
-  mistakesCountEl.textContent = mistakesCount;
+  if (mistakesBox && mistakesCountEl) {
+    mistakesBox.classList.toggle('hidden', !settingsHighlightErrors);
+    mistakesCountEl.textContent = mistakesCount;
+  }
 }
 
 function openSettings() {
@@ -267,26 +289,30 @@ function closeSettings() {
   }
 }
 
-settingsBtnLanding.addEventListener('click', openSettings);
-settingsBtnGame.addEventListener('click', openSettings);
-closeSettingsBtn.addEventListener('click', closeSettings);
-settingsModal.addEventListener('click', (e) => {
-  if (e.target === settingsModal) closeSettings();
-});
+if (settingsBtnLanding) settingsBtnLanding.addEventListener('click', openSettings);
+if (settingsBtnGame) settingsBtnGame.addEventListener('click', openSettings);
+if (closeSettingsBtn) closeSettingsBtn.addEventListener('click', closeSettings);
+if (settingsModal) {
+  settingsModal.addEventListener('click', (e) => {
+    if (e.target === settingsModal) closeSettings();
+  });
+}
 
 // Stats Modal Handlers
-statsBtnLanding.addEventListener('click', () => statsModal.classList.remove('hidden'));
-closeStatsBtn.addEventListener('click', () => statsModal.classList.add('hidden'));
-statsModal.addEventListener('click', (e) => {
-  if (e.target === statsModal) statsModal.classList.add('hidden');
-});
+if (statsBtnLanding) statsBtnLanding.addEventListener('click', () => statsModal.classList.remove('hidden'));
+if (closeStatsBtn) closeStatsBtn.addEventListener('click', () => statsModal.classList.add('hidden'));
+if (statsModal) {
+  statsModal.addEventListener('click', (e) => {
+    if (e.target === statsModal) statsModal.classList.add('hidden');
+  });
+}
 
 // Rules Modal Handlers
 function openRules() { rulesModal.classList.remove('hidden'); }
 function closeRules() { rulesModal.classList.add('hidden'); }
-closeRulesBtn.addEventListener('click', closeRules);
-dismissRulesBtn.addEventListener('click', closeRules);
-btnRulesPause.addEventListener('click', openRules);
+if (closeRulesBtn) closeRulesBtn.addEventListener('click', closeRules);
+if (dismissRulesBtn) dismissRulesBtn.addEventListener('click', closeRules);
+if (btnRulesPause) btnRulesPause.addEventListener('click', openRules);
 
 // --- SMART LOGICAL HINT ENGINE ---
 function openHintModal() {
@@ -348,27 +374,31 @@ function triggerHint() {
   }
 }
 
-btnHint.addEventListener('click', openHintModal);
-closeHintBtn.addEventListener('click', closeHintModal);
-confirmHintBtn.addEventListener('click', triggerHint);
-hintModal.addEventListener('click', (e) => {
-  if (e.target === hintModal) closeHintModal();
-});
+if (btnHint) btnHint.addEventListener('click', openHintModal);
+if (closeHintBtn) closeHintBtn.addEventListener('click', closeHintModal);
+if (confirmHintBtn) confirmHintBtn.addEventListener('click', triggerHint);
+if (hintModal) {
+  hintModal.addEventListener('click', (e) => {
+    if (e.target === hintModal) closeHintModal();
+  });
+}
 
 // Game Over Handlers
-btnGameoverMenu.addEventListener('click', () => {
-  clearSavedGame();
-  gameoverModal.classList.add('hidden');
-  showLandingScreen();
-});
+if (btnGameoverMenu) {
+  btnGameoverMenu.addEventListener('click', () => {
+    clearSavedGame();
+    gameoverModal.classList.add('hidden');
+    showLandingScreen();
+  });
+}
 
 // --- TIMER ENGINE ---
 function startTimer() {
   clearInterval(timerInterval);
   isPaused = false;
   pausedBySettings = false;
-  pauseOverlayEl.classList.add('hidden');
-  pauseBtn.textContent = '⏸';
+  if (pauseOverlayEl) pauseOverlayEl.classList.add('hidden');
+  if (pauseBtn) pauseBtn.textContent = '⏸';
   updateTimerDisplay();
 
   timerInterval = setInterval(() => {
@@ -381,39 +411,41 @@ function startTimer() {
 }
 
 function updateTimerDisplay() {
-  const mins = Math.floor(secondsElapsed / 60);
-  const secs = secondsElapsed % 60;
-  timerEl.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  if (timerEl) {
+    const mins = Math.floor(secondsElapsed / 60);
+    const secs = secondsElapsed % 60;
+    timerEl.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  }
 }
 
 function pauseGame() {
   if (isPaused && !pausedBySettings) return;
   isPaused = true;
-  pauseOverlayEl.classList.remove('hidden');
-  pauseBtn.textContent = '▶';
+  if (pauseOverlayEl) pauseOverlayEl.classList.remove('hidden');
+  if (pauseBtn) pauseBtn.textContent = '▶';
 }
 
 function resumeGame() {
   isPaused = false;
   pausedBySettings = false;
-  pauseOverlayEl.classList.add('hidden');
-  pauseBtn.textContent = '⏸';
+  if (pauseOverlayEl) pauseOverlayEl.classList.add('hidden');
+  if (pauseBtn) pauseBtn.textContent = '⏸';
 }
 
 function togglePause() {
   if (isPaused) resumeGame(); else pauseGame();
 }
 
-pauseBtn.addEventListener('click', togglePause);
-resumeBtn.addEventListener('click', resumeGame);
+if (pauseBtn) pauseBtn.addEventListener('click', togglePause);
+if (resumeBtn) resumeBtn.addEventListener('click', resumeGame);
 
 // --- NAVIGATION FLOW ---
 function hideAllScreens() {
-  landingScreenEl.classList.add('hidden');
-  classicSelectScreenEl.classList.add('hidden');
-  challengeSelectScreenEl.classList.add('hidden');
-  challengeDiffScreenEl.classList.add('hidden');
-  gameScreenEl.classList.add('hidden');
+  if (landingScreenEl) landingScreenEl.classList.add('hidden');
+  if (classicSelectScreenEl) classicSelectScreenEl.classList.add('hidden');
+  if (challengeSelectScreenEl) challengeSelectScreenEl.classList.add('hidden');
+  if (challengeDiffScreenEl) challengeDiffScreenEl.classList.add('hidden');
+  if (gameScreenEl) gameScreenEl.classList.add('hidden');
 }
 
 function showLandingScreen() {
@@ -421,44 +453,52 @@ function showLandingScreen() {
   saveGameToStorage();
   hideAllScreens();
   checkActiveSaveStateOnLanding();
-  landingScreenEl.classList.remove('hidden');
+  if (landingScreenEl) landingScreenEl.classList.remove('hidden');
 }
 
-btnModeClassic.addEventListener('click', () => {
-  if (loadGameFromStorage()) {
-    if (!confirm("Starting a new game will forfeit your current active game. Continue?")) return;
-  }
-  clearSavedGame();
-  activeStream = 'classic';
-  selectedVariant = 'classic';
-  hideAllScreens();
-  classicSelectScreenEl.classList.remove('hidden');
-});
+if (btnModeClassic) {
+  btnModeClassic.addEventListener('click', () => {
+    if (loadGameFromStorage()) {
+      if (!confirm("Starting a new game will forfeit your current active game. Continue?")) return;
+    }
+    clearSavedGame();
+    activeStream = 'classic';
+    selectedVariant = 'classic';
+    hideAllScreens();
+    if (classicSelectScreenEl) classicSelectScreenEl.classList.remove('hidden');
+  });
+}
 
-btnModeChallenge.addEventListener('click', () => {
-  if (loadGameFromStorage()) {
-    if (!confirm("Starting a new game will forfeit your current active game. Continue?")) return;
-  }
-  clearSavedGame();
-  activeStream = 'challenge';
-  hideAllScreens();
-  challengeSelectScreenEl.classList.remove('hidden');
-});
+if (btnModeChallenge) {
+  btnModeChallenge.addEventListener('click', () => {
+    if (loadGameFromStorage()) {
+      if (!confirm("Starting a new game will forfeit your current active game. Continue?")) return;
+    }
+    clearSavedGame();
+    activeStream = 'challenge';
+    hideAllScreens();
+    if (challengeSelectScreenEl) challengeSelectScreenEl.classList.remove('hidden');
+  });
+}
 
-btnResumeSaved.addEventListener('click', () => {
-  const saved = loadGameFromStorage();
-  if (saved) {
-    resumeSavedGame(saved);
-  }
-});
+if (btnResumeSaved) {
+  btnResumeSaved.addEventListener('click', () => {
+    const saved = loadGameFromStorage();
+    if (saved) {
+      resumeSavedGame(saved);
+    }
+  });
+}
 
-btnBackClassic.addEventListener('click', showLandingScreen);
-btnBackChallenge.addEventListener('click', showLandingScreen);
-btnBackChallengeDiff.addEventListener('click', () => {
-  hideAllScreens();
-  challengeSelectScreenEl.classList.remove('hidden');
-});
-menuBtn.addEventListener('click', showLandingScreen);
+if (btnBackClassic) btnBackClassic.addEventListener('click', showLandingScreen);
+if (btnBackChallenge) btnBackChallenge.addEventListener('click', showLandingScreen);
+if (btnBackChallengeDiff) {
+  btnBackChallengeDiff.addEventListener('click', () => {
+    hideAllScreens();
+    if (challengeSelectScreenEl) challengeSelectScreenEl.classList.remove('hidden');
+  });
+}
+if (menuBtn) menuBtn.addEventListener('click', showLandingScreen);
 
 document.querySelectorAll('.diff-option-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -471,9 +511,9 @@ document.querySelectorAll('.variant-option-card:not(.disabled)').forEach(card =>
   card.addEventListener('click', () => {
     selectedVariant = card.dataset.variant;
     const variantNames = { thermometer: 'Thermometer', knight: 'Knight Move', irregular: 'Irregular Jigsaw' };
-    challengeDiffTitle.textContent = variantNames[selectedVariant] || 'Challenge';
+    if (challengeDiffTitle) challengeDiffTitle.textContent = variantNames[selectedVariant] || 'Challenge';
     hideAllScreens();
-    challengeDiffScreenEl.classList.remove('hidden');
+    if (challengeDiffScreenEl) challengeDiffScreenEl.classList.remove('hidden');
   });
 });
 
@@ -487,13 +527,13 @@ document.querySelectorAll('.challenge-diff-btn').forEach(btn => {
 function startNewGame() {
   clearSavedGame();
   hintsRemaining = 5;
-  hintCountEl.textContent = hintsRemaining;
+  if (hintCountEl) hintCountEl.textContent = hintsRemaining;
   mistakesCount = 0;
   secondsElapsed = 0;
   updateMistakesUI();
 
   hideAllScreens();
-  gameScreenEl.classList.remove('hidden');
+  if (gameScreenEl) gameScreenEl.classList.remove('hidden');
   
   generateNewPuzzle();
   renderBoard();
@@ -518,11 +558,11 @@ function resumeSavedGame(saved) {
   selectedVariant = saved.selectedVariant || 'classic';
   selectedClues = saved.selectedClues || 34;
 
-  hintCountEl.textContent = hintsRemaining;
+  if (hintCountEl) hintCountEl.textContent = hintsRemaining;
   updateMistakesUI();
 
   hideAllScreens();
-  gameScreenEl.classList.remove('hidden');
+  if (gameScreenEl) gameScreenEl.classList.remove('hidden');
   renderThermometersSVG();
   renderBoard();
   startTimer();
@@ -603,6 +643,7 @@ function generateThermometersForSolution() {
 
 // --- RENDER THERMOMETER SVG ---
 function renderThermometersSVG() {
+  if (!svgOverlayEl) return;
   svgOverlayEl.innerHTML = '';
   if (selectedVariant !== 'thermometer' || thermometers.length === 0) return;
 
@@ -734,6 +775,7 @@ function hasConflict(r, c) {
 
 // --- COMPLETION CHECK ---
 function checkAndTriggerCompletions(r, c) {
+  if (!boardEl) return;
   let rowSet = new Set(), rowValid = true;
   for (let i = 0; i < 9; i++) {
     const v = boardState[r][i];
@@ -823,6 +865,7 @@ function updateDigitCounts() {
 }
 
 function renderBoard() {
+  if (!boardEl) return;
   boardEl.innerHTML = '';
   
   const selRow = selectedIdx !== null ? Math.floor(selectedIdx / 9) : null;
@@ -927,7 +970,7 @@ function enterDigit(digit) {
         if (mistakesCount >= maxMistakes) {
           clearSavedGame();
           pauseGame();
-          gameoverModal.classList.remove('hidden');
+          if (gameoverModal) gameoverModal.classList.remove('hidden');
         }
       }
     }
@@ -988,10 +1031,10 @@ function undo() {
 
 function setMode(mode) {
   currentMode = mode;
-  modeDigitBtn.classList.toggle('active', mode === 'digit');
-  modePencilBtn.classList.toggle('active', mode === 'pencil');
-  modeColorBtn.classList.toggle('active', mode === 'color');
-  colorPaletteEl.classList.toggle('hidden', mode !== 'color');
+  if (modeDigitBtn) modeDigitBtn.classList.toggle('active', mode === 'digit');
+  if (modePencilBtn) modePencilBtn.classList.toggle('active', mode === 'pencil');
+  if (modeColorBtn) modeColorBtn.classList.toggle('active', mode === 'color');
+  if (colorPaletteEl) colorPaletteEl.classList.toggle('hidden', mode !== 'color');
 }
 
 document.addEventListener('click', (e) => {
@@ -1003,33 +1046,37 @@ document.addEventListener('click', (e) => {
   }
 });
 
-modeDigitBtn.addEventListener('click', () => setMode('digit'));
-modePencilBtn.addEventListener('click', () => setMode('pencil'));
-modeColorBtn.addEventListener('click', () => setMode('color'));
+if (modeDigitBtn) modeDigitBtn.addEventListener('click', () => setMode('digit'));
+if (modePencilBtn) modePencilBtn.addEventListener('click', () => setMode('pencil'));
+if (modeColorBtn) modeColorBtn.addEventListener('click', () => setMode('color'));
 
-colorPaletteEl.addEventListener('click', (e) => {
-  const swatch = e.target.closest('.color-swatch');
-  if (!swatch) return;
-  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
-  swatch.classList.add('active');
-  activeColor = swatch.dataset.color;
-});
+if (colorPaletteEl) {
+  colorPaletteEl.addEventListener('click', (e) => {
+    const swatch = e.target.closest('.color-swatch');
+    if (!swatch) return;
+    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+    swatch.classList.add('active');
+    activeColor = swatch.dataset.color;
+  });
+}
 
-numpadEl.addEventListener('click', (e) => {
-  const btn = e.target.closest('.num-btn');
-  if (!btn) return;
-  enterDigit(parseInt(btn.dataset.value, 10));
-});
+if (numpadEl) {
+  numpadEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('.num-btn');
+    if (!btn) return;
+    enterDigit(parseInt(btn.dataset.value, 10));
+  });
+}
 
-eraseBtn.addEventListener('click', () => enterDigit(0));
-undoBtn.addEventListener('click', undo);
+if (eraseBtn) eraseBtn.addEventListener('click', () => enterDigit(0));
+if (undoBtn) undoBtn.addEventListener('click', undo);
 
 window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
-    if (!settingsModal.classList.contains('hidden')) closeSettings();
-    else if (!statsModal.classList.contains('hidden')) statsModal.classList.add('hidden');
-    else if (!rulesModal.classList.contains('hidden')) closeRules();
-    else if (!hintModal.classList.contains('hidden')) closeHintModal();
+    if (settingsModal && !settingsModal.classList.contains('hidden')) closeSettings();
+    else if (statsModal && !statsModal.classList.contains('hidden')) statsModal.classList.add('hidden');
+    else if (rulesModal && !rulesModal.classList.contains('hidden')) closeRules();
+    else if (hintModal && !hintModal.classList.contains('hidden')) closeHintModal();
     else if (isPaused) resumeGame();
     return;
   }
