@@ -11,6 +11,9 @@ const BASE_SOLUTION = [
 ];
 
 // State Variables
+let selectedVariant = 'classic';
+let selectedClues = 34; // Medium default
+
 let solutionMatrix = [];
 let boardState = [];
 let givensMask = [];
@@ -34,7 +37,13 @@ let secondsElapsed = 0;
 let isPaused = false;
 let pausedBySettings = false;
 
-// DOM Elements
+// DOM Elements - Screens
+const landingScreenEl = document.getElementById('landing-screen');
+const gameScreenEl = document.getElementById('game-screen');
+const startGameBtn = document.getElementById('btn-start-game');
+const menuBtn = document.getElementById('btn-menu');
+
+// DOM Elements - Game Header & Board
 const timerEl = document.getElementById('timer');
 const pauseBtn = document.getElementById('btn-pause');
 const pauseOverlayEl = document.getElementById('pause-overlay');
@@ -44,8 +53,6 @@ const boardEl = document.getElementById('sudoku-board');
 const numpadEl = document.getElementById('numpad');
 const eraseBtn = document.getElementById('btn-erase');
 const undoBtn = document.getElementById('btn-undo');
-const newGameBtn = document.getElementById('btn-new-game');
-const difficultySelect = document.getElementById('difficulty-select');
 
 const modeDigitBtn = document.getElementById('btn-mode-digit');
 const modePencilBtn = document.getElementById('btn-mode-pencil');
@@ -53,7 +60,8 @@ const modeColorBtn = document.getElementById('btn-mode-color');
 const colorPaletteEl = document.getElementById('color-palette');
 
 // Settings Elements
-const settingsBtn = document.getElementById('btn-settings');
+const settingsBtnLanding = document.getElementById('btn-landing-settings');
+const settingsBtnGame = document.getElementById('btn-settings-game');
 const settingsModal = document.getElementById('settings-modal');
 const closeSettingsBtn = document.getElementById('btn-close-settings');
 const toggleDarkMode = document.getElementById('toggle-dark-mode');
@@ -77,7 +85,6 @@ function playCompletionChime() {
 
     const now = audioCtx.currentTime;
     
-    // Play a delicate, ethereal high-register arpeggio (G5, B5, D6) with a very soft decay
     [783.99, 987.77, 1174.66].forEach((freq, index) => {
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
@@ -150,7 +157,9 @@ toggleHighlightErrors.addEventListener('change', (e) => {
 
 // Settings Modal Handlers with Auto-Pause
 function openSettings() {
-  if (!isPaused) {
+  if (!isPaused && !landingScreenEl.classList.contains('hidden')) {
+    pausedBySettings = false;
+  } else if (!isPaused) {
     isPaused = true;
     pausedBySettings = true;
   }
@@ -165,7 +174,8 @@ function closeSettings() {
   }
 }
 
-settingsBtn.addEventListener('click', openSettings);
+settingsBtnLanding.addEventListener('click', openSettings);
+settingsBtnGame.addEventListener('click', openSettings);
 closeSettingsBtn.addEventListener('click', closeSettings);
 settingsModal.addEventListener('click', (e) => {
   if (e.target === settingsModal) closeSettings();
@@ -222,9 +232,25 @@ function togglePause() {
 pauseBtn.addEventListener('click', togglePause);
 resumeBtn.addEventListener('click', resumeGame);
 
+// --- SCREEN SWITCHING & GAME SETUP ---
+function showLandingScreen() {
+  clearInterval(timerInterval);
+  gameScreenEl.classList.add('hidden');
+  landingScreenEl.classList.remove('hidden');
+}
+
+function startNewGame() {
+  landingScreenEl.classList.add('hidden');
+  gameScreenEl.classList.remove('hidden');
+  
+  generateNewPuzzle();
+  renderBoard();
+  startTimer();
+}
+
 // --- PERMUTATION ENGINE ---
 function generateNewPuzzle() {
-  const cluesCount = parseInt(difficultySelect.value, 10);
+  const cluesCount = selectedClues;
   
   const digitMap = [1, 2, 3, 4, 5, 6, 7, 8, 9].sort(() => Math.random() - 0.5);
   let permuted = BASE_SOLUTION.map(row => row.map(val => digitMap[val - 1]));
@@ -604,13 +630,6 @@ function setMode(mode) {
   colorPaletteEl.classList.toggle('hidden', mode !== 'color');
 }
 
-function initGame() {
-  selectedIdx = null;
-  generateNewPuzzle();
-  renderBoard();
-  startTimer();
-}
-
 // --- GLOBAL CLICK OUTSIDE LISTENER ---
 document.addEventListener('click', (e) => {
   const isCell = e.target.closest('.cell');
@@ -624,6 +643,27 @@ document.addEventListener('click', (e) => {
 });
 
 // --- EVENT LISTENERS ---
+startGameBtn.addEventListener('click', startNewGame);
+menuBtn.addEventListener('click', showLandingScreen);
+
+// Variant selection buttons on landing
+document.querySelectorAll('.variant-card:not(.disabled)').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.variant-card').forEach(c => c.classList.remove('active'));
+    card.classList.add('active');
+    selectedVariant = card.dataset.variant;
+  });
+});
+
+// Difficulty selection buttons on landing
+document.querySelectorAll('.diff-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedClues = parseInt(btn.dataset.difficulty, 10);
+  });
+});
+
 modeDigitBtn.addEventListener('click', () => setMode('digit'));
 modePencilBtn.addEventListener('click', () => setMode('pencil'));
 modeColorBtn.addEventListener('click', () => setMode('color'));
@@ -644,8 +684,6 @@ numpadEl.addEventListener('click', (e) => {
 
 eraseBtn.addEventListener('click', () => enterDigit(0));
 undoBtn.addEventListener('click', undo);
-newGameBtn.addEventListener('click', initGame);
-difficultySelect.addEventListener('change', initGame);
 
 window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
@@ -666,4 +704,4 @@ window.addEventListener('keydown', (e) => {
 });
 
 initSettings();
-initGame();
+showLandingScreen();

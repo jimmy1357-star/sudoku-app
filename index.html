@@ -16,73 +16,122 @@
 </head>
 <body>
   <div class="app-container">
-    <!-- Responsive Header Controls -->
-    <header class="app-header">
-      <div class="timer-box">
-        <div id="timer" class="timer-display">00:00</div>
-        <button id="btn-pause" class="btn btn-icon" title="Pause Game">⏸</button>
+    
+    <!-- === LANDING PAGE SCREEN === -->
+    <div id="landing-screen" class="landing-screen">
+      <div class="landing-header">
+        <h1>Sudoku Master</h1>
+        <p>Select your game mode and challenge</p>
       </div>
-      <div class="header-controls">
-        <select id="difficulty-select" class="select-input">
-          <option value="42">Easy</option>
-          <option value="34" selected>Medium</option>
-          <option value="26">Hard</option>
-          <option value="22">Expert</option>
-        </select>
-        <button id="btn-undo" class="btn">Undo ↩</button>
-        <button id="btn-new-game" class="btn btn-primary">New</button>
-        <button id="btn-settings" class="btn btn-icon" title="Settings">⚙️</button>
-      </div>
-    </header>
 
-    <!-- Main Game Board Container -->
-    <main class="game-area">
-      <div id="sudoku-container" class="sudoku-container">
-        <svg id="svg-overlay" class="svg-overlay" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
-        <div id="sudoku-board" class="sudoku-board"></div>
-        
-        <!-- Pause Screen Overlay -->
-        <div id="pause-overlay" class="pause-overlay hidden">
-          <div class="pause-card">
-            <span>GAME PAUSED</span>
-            <button id="btn-resume" class="btn btn-primary">Resume ▶</button>
-          </div>
+      <div class="landing-section">
+        <h2>Game Variant</h2>
+        <div class="variant-grid">
+          <button class="variant-card active" data-variant="classic">
+            <span class="var-icon">🧩</span>
+            <span class="var-title">Classic</span>
+            <span class="var-desc">Standard 9x9 Sudoku</span>
+          </button>
+          <button class="variant-card disabled" data-variant="thermometer">
+            <span class="var-icon">🌡️</span>
+            <span class="var-title">Thermometer</span>
+            <span class="var-desc">Strictly increasing bulbs</span>
+          </button>
+          <button class="variant-card disabled" data-variant="knight">
+            <span class="var-icon">♞</span>
+            <span class="var-title">Knight Move</span>
+            <span class="var-desc">Chess constraint rules</span>
+          </button>
+          <button class="variant-card disabled" data-variant="irregular">
+            <span class="var-icon">⚡</span>
+            <span class="var-title">Irregular</span>
+            <span class="var-desc">Jigsaw regions</span>
+          </button>
         </div>
       </div>
 
-      <!-- Mode Selector Toolbar -->
-      <div class="mode-bar">
-        <button id="btn-mode-digit" class="mode-btn active">Digit</button>
-        <button id="btn-mode-pencil" class="mode-btn">Pencil ✏️</button>
-        <button id="btn-mode-color" class="mode-btn">Color 🎨</button>
+      <div class="landing-section">
+        <h2>Difficulty</h2>
+        <div class="difficulty-grid">
+          <button class="diff-btn" data-difficulty="42">Easy</button>
+          <button class="diff-btn active" data-difficulty="34">Medium</button>
+          <button class="diff-btn" data-difficulty="26">Hard</button>
+          <button class="diff-btn" data-difficulty="22">Expert</button>
+        </div>
       </div>
 
-      <!-- Extended Color Palette -->
-      <div id="color-palette" class="color-palette hidden">
-        <button class="color-swatch c-blue active" data-color="c-blue"></button>
-        <button class="color-swatch c-green" data-color="c-green"></button>
-        <button class="color-swatch c-yellow" data-color="c-yellow"></button>
-        <button class="color-swatch c-purple" data-color="c-purple"></button>
-        <button class="color-swatch c-red" data-color="c-red"></button>
-        <button class="color-swatch c-orange" data-color="c-orange"></button>
-        <button class="color-swatch c-pink" data-color="c-pink"></button>
-        <button class="color-swatch c-clear" data-color="clear">✕</button>
+      <button id="btn-start-game" class="btn btn-primary btn-lg">Start Game ▶</button>
+      
+      <div class="landing-footer">
+        <button id="btn-landing-settings" class="btn">⚙️ Settings</button>
       </div>
+    </div>
 
-      <!-- Touch Numpad with Remaining Counts Badges -->
-      <div id="numpad" class="numpad">
-        <button class="num-btn" data-value="1">1<span class="digit-count"></span></button>
-        <button class="num-btn" data-value="2">2<span class="digit-count"></span></button>
-        <button class="num-btn" data-value="3">3<span class="digit-count"></span></button>
-        <button class="num-btn" data-value="4">4<span class="digit-count"></span></button>
-        <button class="num-btn" data-value="5">5<span class="digit-count"></span></button>
-        <button class="num-btn" data-value="6">6<span class="digit-count"></span></button>
-        <button class="num-btn" data-value="7">7<span class="digit-count"></span></button>
-        <button class="num-btn" data-value="8">8<span class="digit-count"></span></button>
-        <button class="num-btn" data-value="9">9<span class="digit-count"></span></button>
-        <button id="btn-erase" class="num-btn btn-erase-slot" data-value="0">⌫</button>
-      </div>
-    </main>
+    <!-- === ACTIVE GAME SCREEN === -->
+    <div id="game-screen" class="game-screen hidden">
+      <!-- Header Controls -->
+      <header class="app-header">
+        <div class="timer-box">
+          <div id="timer" class="timer-display">00:00</div>
+          <button id="btn-pause" class="btn btn-icon" title="Pause Game">⏸</button>
+        </div>
+        <div class="header-controls">
+          <button id="btn-menu" class="btn">🏠 Menu</button>
+          <button id="btn-undo" class="btn">Undo ↩</button>
+          <button id="btn-settings-game" class="btn btn-icon" title="Settings">⚙️</button>
+        </div>
+      </header>
+
+      <!-- Main Game Board Container -->
+      <main class="game-area">
+        <div id="sudoku-container" class="sudoku-container">
+          <svg id="svg-overlay" class="svg-overlay" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+          <div id="sudoku-board" class="sudoku-board"></div>
+          
+          <!-- Pause Screen Overlay -->
+          <div id="pause-overlay" class="pause-overlay hidden">
+            <div class="pause-card">
+              <span>GAME PAUSED</span>
+              <button id="btn-resume" class="btn btn-primary">Resume ▶</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mode Selector Toolbar -->
+        <div class="mode-bar">
+          <button id="btn-mode-digit" class="mode-btn active">Digit</button>
+          <button id="btn-mode-pencil" class="mode-btn">Pencil ✏️</button>
+          <button id="btn-mode-color" class="mode-btn">Color 🎨</button>
+        </div>
+
+        <!-- Extended Color Palette -->
+        <div id="color-palette" class="color-palette hidden">
+          <button class="color-swatch c-blue active" data-color="c-blue"></button>
+          <button class="color-swatch c-green" data-color="c-green"></button>
+          <button class="color-swatch c-yellow" data-color="c-yellow"></button>
+          <button class="color-swatch c-purple" data-color="c-purple"></button>
+          <button class="color-swatch c-red" data-color="c-red"></button>
+          <button class="color-swatch c-orange" data-color="c-orange"></button>
+          <button class="color-swatch c-pink" data-color="c-pink"></button>
+          <button class="color-swatch c-clear" data-color="clear">✕</button>
+        </div>
+
+        <!-- Touch Numpad with Remaining Counts Badges -->
+        <div id="numpad" class="numpad">
+          <button class="num-btn" data-value="1">1<span class="digit-count"></span></button>
+          <button class="num-btn" data-value="2">2<span class="digit-count"></span></button>
+          <button class="num-btn" data-value="3">3<span class="digit-count"></span></button>
+          <button class="num-btn" data-value="4">4<span class="digit-count"></span></button>
+          <button class="num-btn" data-value="5">5<span class="digit-count"></span></button>
+          <button class="num-btn" data-value="6">6<span class="digit-count"></span></button>
+          <button class="num-btn" data-value="7">7<span class="digit-count"></span></button>
+          <button class="num-btn" data-value="8">8<span class="digit-count"></span></button>
+          <button class="num-btn" data-value="9">9<span class="digit-count"></span></button>
+          <button id="btn-erase" class="num-btn btn-erase-slot" data-value="0">⌫</button>
+        </div>
+      </main>
+    </div>
+
   </div>
 
   <!-- Settings Overlay Modal -->
