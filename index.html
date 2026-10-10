@@ -102,7 +102,7 @@
       </div>
 
       <div class="variant-stack">
-        <button class="variant-option-card disabled" data-variant="thermometer">
+        <button class="variant-option-card" data-variant="thermometer">
           <span class="var-icon">🌡️</span>
           <div class="var-info">
             <span class="var-title">Thermometer</span>
@@ -128,7 +128,7 @@
       </div>
     </div>
 
-    <!-- === SCREEN 2C: CHALLENGE DIFFICULTY SELECT (Hard & Expert only) === -->
+    <!-- === SCREEN 2C: CHALLENGE DIFFICULTY SELECT (Hard & Expert) === -->
     <div id="challenge-diff-screen" class="landing-screen hidden">
       <div class="landing-header">
         <button id="btn-back-challenge-diff" class="btn-back">← Back</button>
@@ -139,11 +139,11 @@
       <div class="difficulty-stack">
         <button class="challenge-diff-btn" data-difficulty="26">
           <span class="diff-name">Hard</span>
-          <span class="diff-sub">26 Clues + Variant Constraints</span>
+          <span class="diff-sub">Standard Clues + Thermometers</span>
         </button>
-        <button class="challenge-diff-btn" data-difficulty="22">
+        <button class="challenge-diff-btn" data-difficulty="0">
           <span class="diff-name">Expert</span>
-          <span class="diff-sub">22 Clues + Variant Constraints</span>
+          <span class="diff-sub">Zero / Minimal Clues + Dense Thermometers</span>
         </button>
       </div>
     </div>
@@ -158,7 +158,6 @@
         </div>
         <div class="header-controls">
           <button id="btn-menu" class="btn btn-with-icon">
-            <!-- Simple Monochrome House SVG -->
             <svg class="btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
               <polyline points="9 22 9 12 15 12 15 22"/>
@@ -180,6 +179,7 @@
           <div id="pause-overlay" class="pause-overlay hidden">
             <div class="pause-card">
               <span>GAME PAUSED</span>
+              <button id="btn-rules-pause" class="btn">📜 View Variant Rules</button>
               <button id="btn-resume" class="btn btn-primary">Resume ▶</button>
             </div>
           </div>
@@ -220,6 +220,24 @@
       </main>
     </div>
 
+  </div>
+
+  <!-- Variant Rules Explanation Modal -->
+  <div id="rules-modal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="rules-title">Thermometer Rules</h2>
+        <button id="btn-close-rules" class="btn-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="rules-body-content" class="rules-text">
+          <p><strong>Thermometer Constraint:</strong></p>
+          <p>Numbers along a thermometer must <strong>strictly increase</strong> moving from the circular bulb end toward the flat tip.</p>
+          <p><em>Example:</em> A 3-cell thermometer starting at a bulb could contain <strong>1 ➔ 4 ➔ 8</strong>, but not <strong>2 ➔ 2 ➔ 5</strong> or <strong>6 ➔ 3 ➔ 9</strong>.</p>
+        </div>
+        <button id="btn-dismiss-rules" class="btn btn-primary" style="margin-top: 8px;">Got It!</button>
+      </div>
+    </div>
   </div>
 
   <!-- Settings Overlay Modal -->

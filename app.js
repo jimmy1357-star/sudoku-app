@@ -12,7 +12,7 @@ const BASE_SOLUTION = [
 
 // State Variables
 let activeStream = 'classic'; // 'classic' or 'challenge'
-let selectedVariant = 'classic';
+let selectedVariant = 'classic'; // 'classic', 'thermometer'
 let selectedClues = 34; // Default Medium
 
 let solutionMatrix = [];
@@ -21,6 +21,7 @@ let givensMask = [];
 let notesState = [];
 let colorsState = [];
 let moveHistory = [];
+let thermometers = []; // Array of cell paths: [[ {r, c}, {r, c}, ... ]]
 
 let selectedIdx = null;
 let currentMode = 'digit'; // 'digit', 'pencil', 'color'
@@ -61,8 +62,10 @@ const timerEl = document.getElementById('timer');
 const pauseBtn = document.getElementById('btn-pause');
 const pauseOverlayEl = document.getElementById('pause-overlay');
 const resumeBtn = document.getElementById('btn-resume');
+const btnRulesPause = document.getElementById('btn-rules-pause');
 
 const boardEl = document.getElementById('sudoku-board');
+const svgOverlayEl = document.getElementById('svg-overlay');
 const numpadEl = document.getElementById('numpad');
 const eraseBtn = document.getElementById('btn-erase');
 const undoBtn = document.getElementById('btn-undo');
@@ -71,6 +74,11 @@ const modeDigitBtn = document.getElementById('btn-mode-digit');
 const modePencilBtn = document.getElementById('btn-mode-pencil');
 const modeColorBtn = document.getElementById('btn-mode-color');
 const colorPaletteEl = document.getElementById('color-palette');
+
+// Rules Modal Elements
+const rulesModal = document.getElementById('rules-modal');
+const closeRulesBtn = document.getElementById('btn-close-rules');
+const dismissRulesBtn = document.getElementById('btn-dismiss-rules');
 
 // Settings Elements
 const settingsBtnLanding = document.getElementById('btn-landing-settings');
@@ -205,6 +213,19 @@ statsModal.addEventListener('click', (e) => {
   if (e.target === statsModal) statsModal.classList.add('hidden');
 });
 
+// Rules Modal Handlers
+function openRules() {
+  rulesModal.classList.remove('hidden');
+}
+
+function closeRules() {
+  rulesModal.classList.add('hidden');
+}
+
+closeRulesBtn.addEventListener('click', closeRules);
+dismissRulesBtn.addEventListener('click', closeRules);
+btnRulesPause.addEventListener('click', openRules);
+
 // --- TIMER ENGINE ---
 function startTimer() {
   clearInterval(timerInterval);
@@ -326,9 +347,123 @@ function startNewGame() {
   generateNewPuzzle();
   renderBoard();
   startTimer();
+
+  if (selectedVariant !== 'classic') {
+    openRules();
+  }
 }
 
-// --- PERMUTATION ENGINE ---
+// --- THERMOMETER GENERATOR ENGINE ---
+function generateThermometersForSolution() {
+  thermometers = [];
+  const usedCells = new Set();
+  const targetCount = selectedClues === 0 ? 6 : 4; // Dense thermometers for expert zero-clue
+
+  const directions = [
+    { dr: -1, dc: 0 },
+    { dr: 1, dc: 0 },
+    { dr: 0, dc: -1 },
+    { dr: 0, dc: 1 }
+  ];
+
+  for (let attempt = 0; attempt < 80 && thermometers.length < targetCount; attempt++) {
+    const startR = Math.floor(Math.random() * 9);
+    const startC = Math.floor(Math.random() * 9);
+    const key = `${startR},${startC}`;
+
+    if (usedCells.has(key)) continue;
+
+    const path = [{ r: startR, c: startC }];
+    let currR = startR;
+    let currC = startC;
+    let currVal = solutionMatrix[currR][currC];
+
+    const targetLength = Math.floor(Math.random() * 4) + 3; // 3 to 6 cells length
+
+    for (let step = 0; step < targetLength - 1; step++) {
+      const validNeighbors = [];
+      directions.forEach(d => {
+        const nr = currR + d.dr;
+        const nc = currC + d.dc;
+        if (nr >= 0 && nr < 9 && nc >= 0 && nc < 9) {
+          const nKey = `${nr},${nc}`;
+          if (!path.some(p => p.r === nr && p.c === nc)) { // No self-crossing
+            const nextVal = solutionMatrix[nr][nc];
+            if (nextVal > currVal) {
+              validNeighbors.push({ r: nr, c: nc, val: nextVal });
+            }
+          }
+        }
+      });
+
+      if (validNeighbors.length === 0) break;
+
+      validNeighbors.sort((a, b) => a.val - b.val);
+      const chosen = validNeighbors[0];
+
+      path.push({ r: chosen.r, c: chosen.c });
+      currR = chosen.r;
+      currC = chosen.c;
+      currVal = chosen.val;
+    }
+
+    if (path.length >= 3) {
+      thermometers.push(path);
+      path.forEach(p => usedCells.add(`${p.r},${p.c}`));
+    }
+  }
+}
+
+// --- RENDER THERMOMETER SVG OVERLAY ENGINE ---
+function renderThermometersSVG() {
+  svgOverlayEl.innerHTML = '';
+  if (selectedVariant !== 'thermometer' || thermometers.length === 0) return;
+
+  const cellSize = 100 / 9; // SVG viewBox is 0 0 100 100
+
+  thermometers.forEach(path => {
+    if (path.length === 0) return;
+
+    // Draw Thermometer Tubing/Stem (Path line)
+    if (path.length > 1) {
+      let pathData = '';
+      path.forEach((pt, idx) => {
+        const x = pt.c * cellSize + cellSize / 2;
+        const y = pt.r * cellSize + cellSize / 2;
+        if (idx === 0) {
+          pathData += `M ${x} ${y}`;
+        } else {
+          pathData += ` L ${x} ${y}`;
+        }
+      });
+
+      const strokePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      strokePath.setAttribute('d', pathData);
+      strokePath.setAttribute('stroke', 'var(--thermo-stem)');
+      strokePath.setAttribute('stroke-width', '4.5');
+      strokePath.setAttribute('fill', 'none');
+      strokePath.setAttribute('stroke-linecap', 'round');
+      strokePath.setAttribute('stroke-linejoin', 'round');
+      svgOverlayEl.appendChild(strokePath);
+    }
+
+    // Draw Thermometer Bulb (Circle at start)
+    const bulbPt = path[0];
+    const bulbX = bulbPt.c * cellSize + cellSize / 2;
+    const bulbY = bulbPt.r * cellSize + cellSize / 2;
+
+    const bulbCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    bulbCircle.setAttribute('cx', bulbX);
+    bulbCircle.setAttribute('cy', bulbY);
+    bulbCircle.setAttribute('r', '4.2');
+    bulbCircle.setAttribute('fill', 'var(--thermo-bulb)');
+    bulbCircle.setAttribute('stroke', 'var(--border-strong)');
+    bulbCircle.setAttribute('stroke-width', '0.6');
+    svgOverlayEl.appendChild(bulbCircle);
+  });
+}
+
+// --- PERMUTATION & CLUE GENERATOR ENGINE ---
 function generateNewPuzzle() {
   const cluesCount = selectedClues;
   
@@ -353,6 +488,12 @@ function generateNewPuzzle() {
   colorsState = Array.from({ length: 9 }, () => Array(9).fill(null));
   moveHistory = [];
 
+  if (selectedVariant === 'thermometer') {
+    generateThermometersForSolution();
+  } else {
+    thermometers = [];
+  }
+
   let placedClues = 0;
   while (placedClues < cluesCount) {
     let r = Math.floor(Math.random() * 9);
@@ -363,6 +504,8 @@ function generateNewPuzzle() {
       placedClues++;
     }
   }
+
+  renderThermometersSVG();
 }
 
 // --- RULE-BASED CONFLICT VALIDATION ENGINE ---
@@ -370,6 +513,7 @@ function hasConflict(r, c) {
   const val = boardState[r][c];
   if (val === 0) return false;
 
+  // Standard Sudoku Constraints
   for (let i = 0; i < 9; i++) {
     if (i !== c && boardState[r][i] === val) return true;
     if (i !== r && boardState[i][c] === val) return true;
@@ -383,6 +527,24 @@ function hasConflict(r, c) {
       const col = boxStartCol + bc;
       if ((row !== r || col !== c) && boardState[row][col] === val) {
         return true;
+      }
+    }
+  }
+
+  // Thermometer Constraint Validation
+  if (selectedVariant === 'thermometer') {
+    for (const path of thermometers) {
+      for (let i = 0; i < path.length - 1; i++) {
+        const currCell = path[i];
+        const nextCell = path[i + 1];
+        const v1 = boardState[currCell.r][currCell.c];
+        const v2 = boardState[nextCell.r][nextCell.c];
+
+        if (v1 !== 0 && v2 !== 0 && v1 >= v2) {
+          if ((currCell.r === r && currCell.c === c) || (nextCell.r === r && nextCell.c === c)) {
+            return true;
+          }
+        }
       }
     }
   }
@@ -750,6 +912,8 @@ window.addEventListener('keydown', (e) => {
       closeSettings();
     } else if (!statsModal.classList.contains('hidden')) {
       statsModal.classList.add('hidden');
+    } else if (!rulesModal.classList.contains('hidden')) {
+      closeRules();
     } else if (isPaused) {
       resumeGame();
     }
