@@ -11,9 +11,9 @@ const BASE_SOLUTION = [
 ];
 
 // State Variables
-let activeStream = 'classic'; // 'classic' or 'challenge'
-let selectedVariant = 'classic'; // 'classic', 'thermometer'
-let selectedClues = 34; // Default Medium
+let activeStream = 'classic'; 
+let selectedVariant = 'classic'; 
+let selectedClues = 34; 
 
 let solutionMatrix = [];
 let boardState = [];
@@ -243,13 +243,13 @@ closeRulesBtn.addEventListener('click', closeRules);
 dismissRulesBtn.addEventListener('click', closeRules);
 btnRulesPause.addEventListener('click', openRules);
 
-// --- HINT ENGINE ---
+// --- SMART LOGICAL HINT ENGINE ---
 function openHintModal() {
   if (hintsRemaining <= 0) {
     hintMessageEl.textContent = "You have no hints remaining for this game!";
     confirmHintBtn.style.display = 'none';
   } else {
-    hintMessageEl.textContent = `Would you like a directional hint? You have [${hintsRemaining}] remaining.`;
+    hintMessageEl.textContent = `Would you like a logical guide hint? You have [${hintsRemaining}] remaining.`;
     confirmHintBtn.style.display = 'block';
   }
   hintModal.classList.remove('hidden');
@@ -265,42 +265,48 @@ function triggerHint() {
   hintCountEl.textContent = hintsRemaining;
   closeHintModal();
 
-  let hintGiven = false;
-
+  // 1. Check for active errors first
   for (let r = 0; r < 9; r++) {
     for (let c = 0; c < 9; c++) {
       if (boardState[r][c] !== 0 && !givensMask[r][c] && hasConflict(r, c)) {
         selectedIdx = r * 9 + c;
         renderBoard();
-        alert(`💡 Directional Hint: Check cell at Row ${r + 1}, Col ${c + 1}—its current number creates a rule conflict.`);
-        hintGiven = true;
+        alert(`💡 Logical Guide: Cell at Row ${r + 1}, Col ${c + 1} violates a rule constraint. Look at its intersecting row/column or thermometer path.`);
         return;
       }
     }
   }
 
-  if (!hintGiven && selectedVariant === 'thermometer' && thermometers.length > 0) {
+  // 2. Generate insightful thermometer guidance based on solution math
+  if (selectedVariant === 'thermometer' && thermometers.length > 0) {
     const thermo = thermometers[Math.floor(Math.random() * thermometers.length)];
     const bulb = thermo[0];
-    hintGiven = true;
+    const correctVal = solutionMatrix[bulb.r][bulb.c];
+    const maxPossibleAtBulb = 10 - thermo.length;
+
     selectedIdx = bulb.r * 9 + bulb.c;
     renderBoard();
-    alert(`💡 Directional Hint: Trace the thermometer starting at Row ${bulb.r + 1}, Col ${bulb.c + 1} (bulb). Remember numbers must strictly increase from here!`);
-    return;
+
+    if (boardState[bulb.r][bulb.c] === 0) {
+      alert(`💡 Logical Guide: Look at the thermometer bulb at Row ${bulb.r + 1}, Col ${bulb.c + 1}. Because this thermometer is ${thermo.length} cells long, the bulb cannot exceed ${maxPossibleAtBulb} (leaving space for higher numbers along the stem).`);
+      return;
+    }
   }
 
-  if (!hintGiven) {
-    for (let r = 0; r < 9; r++) {
-      for (let c = 0; c < 9; c++) {
-        if (boardState[r][c] === 0) {
-          selectedIdx = r * 9 + c;
-          renderBoard();
-          alert(`💡 Directional Hint: Look around Row ${r + 1}, Col ${c + 1} to fill in missing possibilities.`);
-          return;
-        }
+  // 3. General empty cell deduction guidance
+  for (let r = 0; r < 9; r++) {
+    for (let c = 0; c < 9; c++) {
+      if (boardState[r][c] === 0 && !givensMask[r][c]) {
+        selectedIdx = r * 9 + c;
+        renderBoard();
+        const correct = solutionMatrix[r][c];
+        alert(`💡 Logical Guide: Examine Row ${r + 1}, Col ${c + 1}. Note what numbers are already locked into its 3x3 box and row to narrow down candidates.`);
+        return;
       }
     }
   }
+
+  alert("💡 Logical Guide: The board is looking great! Check your remaining open cells.");
 }
 
 btnHint.addEventListener('click', openHintModal);
