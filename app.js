@@ -131,7 +131,6 @@ function saveGameToStorage() {
   try {
     if (!boardState || boardState.length === 0) return;
 
-    // Convert notesState Set objects to plain Arrays for JSON serialization
     const serializableNotes = notesState.map(row => 
       row.map(cellSet => (cellSet instanceof Set ? Array.from(cellSet) : Array.isArray(cellSet) ? cellSet : []))
     );
@@ -444,6 +443,14 @@ function attachEventListeners() {
     if (e.key >= '1' && e.key <= '9') enterDigit(parseInt(e.key, 10));
     if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') enterDigit(0);
   });
+
+  // Mobile App Lifecycle Persistence Listeners
+  window.addEventListener('pagehide', () => saveGameToStorage());
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      saveGameToStorage();
+    }
+  });
 }
 
 function updateMistakesUI() {
@@ -618,7 +625,6 @@ function resumeSavedGame(saved) {
   givensMask = saved.givensMask && saved.givensMask.length === 9 ? saved.givensMask : Array.from({ length: 9 }, () => Array(9).fill(false));
   solutionMatrix = saved.solutionMatrix && saved.solutionMatrix.length === 9 ? saved.solutionMatrix : BASE_SOLUTION;
   
-  // Convert restored Array back to Set objects for notesState
   if (saved.notesState && saved.notesState.length === 9) {
     notesState = saved.notesState.map(row => 
       row.map(cellArr => new Set(Array.isArray(cellArr) ? cellArr : []))
@@ -640,9 +646,13 @@ function resumeSavedGame(saved) {
 
   hideAllScreens();
   if (gameScreenEl) gameScreenEl.classList.remove('hidden');
-  renderThermometersSVG();
-  renderBoard();
-  startTimer();
+
+  // Use requestAnimationFrame to ensure mobile viewports paint the DOM container before rendering cells
+  requestAnimationFrame(() => {
+    renderThermometersSVG();
+    renderBoard();
+    startTimer();
+  });
 }
 
 function generateThermometersForSolution() {
