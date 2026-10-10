@@ -647,7 +647,6 @@ function resumeSavedGame(saved) {
   hideAllScreens();
   if (gameScreenEl) gameScreenEl.classList.remove('hidden');
 
-  // Use requestAnimationFrame to ensure mobile viewports paint the DOM container before rendering cells
   requestAnimationFrame(() => {
     renderThermometersSVG();
     renderBoard();
@@ -727,6 +726,7 @@ function generateThermometersForSolution() {
   }
 }
 
+// --- UNIFIED SEAMLESS THERMOMETER SVG RENDERER ---
 function renderThermometersSVG() {
   if (!svgOverlayEl) return;
   svgOverlayEl.innerHTML = '';
@@ -737,36 +737,34 @@ function renderThermometersSVG() {
   thermometers.forEach(path => {
     if (path.length === 0) return;
 
-    if (path.length > 1) {
-      let pathData = '';
-      path.forEach((pt, idx) => {
-        const x = pt.c * cellSize + cellSize / 2;
-        const y = pt.r * cellSize + cellSize / 2;
-        if (idx === 0) pathData += `M ${x} ${y}`;
-        else pathData += ` L ${x} ${y}`;
-      });
-
-      const strokePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      strokePath.setAttribute('d', pathData);
-      strokePath.setAttribute('stroke', 'var(--thermo-stem)');
-      strokePath.setAttribute('stroke-width', '2.8');
-      strokePath.setAttribute('fill', 'none');
-      strokePath.setAttribute('stroke-linecap', 'round');
-      strokePath.setAttribute('stroke-linejoin', 'round');
-      svgOverlayEl.appendChild(strokePath);
-    }
-
     const bulbPt = path[0];
     const bulbX = bulbPt.c * cellSize + cellSize / 2;
     const bulbY = bulbPt.r * cellSize + cellSize / 2;
 
+    // Build seamless path string starting right from the bulb center
+    let pathData = `M ${bulbX} ${bulbY}`;
+    path.forEach((pt) => {
+      const x = pt.c * cellSize + cellSize / 2;
+      const y = pt.r * cellSize + cellSize / 2;
+      pathData += ` L ${x} ${y}`;
+    });
+
+    // Glass stem outline
+    const glassPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    glassPath.setAttribute('d', pathData);
+    glassPath.setAttribute('stroke', 'var(--thermo-stem)');
+    glassPath.setAttribute('stroke-width', '4.2');
+    glassPath.setAttribute('fill', 'none');
+    glassPath.setAttribute('stroke-linecap', 'round');
+    glassPath.setAttribute('stroke-linejoin', 'round');
+    svgOverlayEl.appendChild(glassPath);
+
+    // Seamless bulb circle matching the stem width exactly
     const bulbCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     bulbCircle.setAttribute('cx', bulbX);
     bulbCircle.setAttribute('cy', bulbY);
-    bulbCircle.setAttribute('r', '3.8');
-    bulbCircle.setAttribute('fill', 'var(--thermo-bulb)');
-    bulbCircle.setAttribute('stroke', 'var(--border-strong)');
-    bulbCircle.setAttribute('stroke-width', '0.5');
+    bulbCircle.setAttribute('r', '4.2');
+    bulbCircle.setAttribute('fill', 'var(--thermo-stem)');
     svgOverlayEl.appendChild(bulbCircle);
   });
 }
