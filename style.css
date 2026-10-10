@@ -1,831 +1,1105 @@
-:root {
-  /* Default Dark Mode Theme */
-  --bg-color: #0f172a;
-  --card-bg: #1e293b;
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --accent: #38bdf8;
-  --user-digit: #60a5fa;
-  --error-color: #f87171;
-  --border-subtle: #334155;
-  --border-strong: #94a3b8;
-
-  /* Thermometer Overlay Styling - High Contrast */
-  --thermo-bulb: #64748b;
-  --thermo-stem: rgba(100, 116, 139, 0.65);
-
-  /* Softer Highlight Tints (Dark Mode) */
-  --highlight-tint: rgba(255, 255, 255, 0.04);
-  --same-num-tint: rgba(56, 189, 248, 0.25);
-
-  /* Custom Marking Colors (Dark Mode) */
-  --mark-blue: rgba(56, 189, 248, 0.35);
-  --mark-green: rgba(74, 222, 128, 0.35);
-  --mark-yellow: rgba(250, 204, 21, 0.35);
-  --mark-purple: rgba(192, 132, 252, 0.35);
-  --mark-red: rgba(220, 38, 38, 0.45);
-  --mark-orange: rgba(251, 146, 60, 0.35);
-  --mark-pink: rgba(251, 207, 232, 0.35);
-
-  /* Completion Glow Color */
-  --completion-glow: rgba(56, 189, 248, 0.65);
-}
-
-/* Light Theme Overrides */
-body.light-mode {
-  --bg-color: #f1f5f9;
-  --card-bg: #ffffff;
-  --text-main: #0f172a;
-  --text-muted: #64748b;
-  --accent: #0284c7;
-  --user-digit: #2563eb;
-  --error-color: #dc2626;
-  --border-subtle: #e2e8f0;
-  --border-strong: #94a3b8;
-
-  /* Thermometer Overlay (Light Mode) */
-  --thermo-bulb: #94a3b8;
-  --thermo-stem: rgba(148, 163, 184, 0.65);
-
-  /* Softer Highlight Tints (Light Mode) */
-  --highlight-tint: rgba(0, 0, 0, 0.05);
-  --same-num-tint: rgba(14, 165, 233, 0.2);
-
-  --mark-pink: rgba(236, 72, 153, 0.25);
-  --completion-glow: rgba(2, 132, 199, 0.65);
-}
-
-body.light-mode .color-swatch.c-pink {
-  background: #f472b6;
-}
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  touch-action: manipulation;
-  user-select: none;
-}
-
-html, body {
-  width: 100%;
-  min-height: 100vh;
-  overflow-x: hidden;
-  background-color: var(--bg-color);
-  color: var(--text-main);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  overscroll-behavior-y: none; /* Disables pull-down-to-refresh on mobile/PWA */
-}
-
-body {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 8px;
-  transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-.app-container {
-  width: 100%;
-  max-width: 400px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin: 0 auto;
-}
-
-/* === SVG ICON STYLES === */
-.svg-icon {
-  width: 32px;
-  height: 32px;
-  color: var(--accent);
-}
-
-.btn-with-icon {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.btn-svg {
-  width: 14px;
-  height: 14px;
-  color: currentColor;
-}
-
-/* Mistakes Strike Counter Badge */
-.mistakes-box {
-  background: rgba(248, 113, 113, 0.15);
-  color: var(--error-color);
-  border: 1px solid var(--error-color);
-  padding: 5px 8px;
-  border-radius: 6px;
-  font-weight: 700;
-  font-size: 0.78rem;
-  white-space: nowrap;
-}
-
-.mistakes-box.hidden {
-  display: none;
-}
-
-/* === LANDING SCREEN STYLES === */
-.landing-screen {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  width: 100%;
-  padding: 8px 0;
-}
-
-.landing-screen.hidden {
-  display: none;
-}
-
-.landing-header {
-  position: relative;
-  text-align: center;
-  margin-bottom: 4px;
-}
-
-.btn-back {
-  position: absolute;
-  left: 0;
-  top: 0;
-  background: transparent;
-  border: none;
-  color: var(--accent);
-  font-weight: 700;
-  font-size: 0.9rem;
-  cursor: pointer;
-}
-
-.landing-header h1 {
-  font-size: 1.8rem;
-  color: var(--accent);
-  margin-bottom: 4px;
-}
-
-.landing-header p {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-/* Resume Active Game Card */
-.resume-card {
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.15) 0%, var(--card-bg) 100%);
-  border: 2px solid var(--accent);
-}
-.resume-card.hidden {
-  display: none;
-}
-
-/* Landing Main Modes (Classic / Challenge) */
-.main-mode-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.main-mode-card {
-  background: var(--card-bg);
-  border: 2px solid var(--border-subtle);
-  border-radius: 12px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  cursor: pointer;
-  text-align: left;
-  transition: all 0.2s ease;
-}
-
-.main-mode-card:active {
-  transform: scale(0.98);
-  border-color: var(--accent);
-}
-
-.main-mode-card.challenge-tint {
-  background: linear-gradient(135deg, var(--card-bg) 0%, rgba(56, 189, 248, 0.08) 100%);
-}
-
-.mode-icon {
-  display: flex;
-  align-items: center;
-}
-
-.mode-title {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: var(--text-main);
-}
-
-.mode-desc {
-  font-size: 0.78rem;
-  color: var(--text-muted);
-}
-
-/* Difficulty Stack (Classic & Challenge) */
-.difficulty-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.diff-option-btn, .challenge-diff-btn {
-  background: var(--card-bg);
-  border: 1.5px solid var(--border-subtle);
-  border-radius: 10px;
-  padding: 14px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  cursor: pointer;
-  text-align: left;
-  transition: all 0.2s ease;
-}
-
-.diff-option-btn:active, .challenge-diff-btn:active {
-  border-color: var(--accent);
-  background: rgba(56, 189, 248, 0.1);
-}
-
-.diff-name {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--accent);
-}
-
-.diff-sub {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-/* Variant Options Stack */
-.variant-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.variant-option-card {
-  background: var(--card-bg);
-  border: 1.5px solid var(--border-subtle);
-  border-radius: 10px;
-  padding: 14px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  cursor: pointer;
-  text-align: left;
-  transition: all 0.2s ease;
-}
-
-.variant-option-card.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.var-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.var-title {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--text-main);
-}
-
-.var-desc {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-.landing-footer {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 8px;
-}
-
-/* === GAME SCREEN STYLES === */
-.game-screen {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  width: 100%;
-}
-
-.game-screen.hidden {
-  display: none;
-}
-
-/* Two-Tier Header Layout */
-.app-header-two-tier {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  width: 100%;
-  background: var(--card-bg);
-  padding: 6px 8px;
-  border-radius: 8px;
-  border: 1px solid var(--border-subtle);
-}
-
-.header-tier {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-}
-
-.tier-group {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-}
-
-.right-actions {
-  margin-left: auto;
-}
-
-.timer-box {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.timer-display {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--accent);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.5px;
-}
-
-.btn {
-  background: var(--card-bg);
-  color: var(--text-main);
-  border: 1px solid var(--border-subtle);
-  padding: 5px 9px;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 0.75rem;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.btn-icon {
-  font-size: 0.85rem;
-  padding: 5px 7px;
-}
-
-.btn-primary {
-  background: var(--accent);
-  color: #0f172a;
-  border: none;
-}
-
-body.light-mode .btn-primary {
-  color: #ffffff;
-}
-
-/* Game Board Container */
-.game-area {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  width: 100%;
-}
-
-.sudoku-container {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 1;
-  border: 2px solid var(--border-strong);
-  border-radius: 6px;
-  overflow: hidden;
-  background: var(--border-strong);
-}
-
-.svg-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 10;
-}
-
-.sudoku-board {
-  display: grid;
-  grid-template-columns: repeat(9, 1fr);
-  grid-template-rows: repeat(9, 1fr);
-  gap: 1px;
-  background: var(--border-subtle);
-  width: 100%;
-  height: 100%;
-  position: relative;
-  z-index: 1;
-}
-
-/* Pause Overlay Screen */
-.pause-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.65);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 50;
-}
-
-body.light-mode .pause-overlay {
-  background: rgba(255, 255, 255, 0.65);
-}
-
-.pause-overlay.hidden { display: none; }
-
-.pause-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  font-weight: 700;
-  font-size: 1.15rem;
-  color: var(--accent);
-  letter-spacing: 1px;
-}
-
-/* Base Cell */
-.cell {
-  background: var(--card-bg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.3rem;
-  font-weight: 700;
-  cursor: pointer;
-  position: relative;
-  z-index: 2;
-}
-
-/* 3x3 Block Thicker Boundaries */
-.cell[data-col="2"], .cell[data-col="5"] {
-  border-right: 2.5px solid var(--border-strong);
-}
-
-.cell[data-row="2"], .cell[data-row="5"] {
-  border-bottom: 2.5px solid var(--border-strong);
-}
-
-/* Custom Marking Colors */
-.cell.c-blue { background-color: var(--mark-blue); }
-.cell.c-green { background-color: var(--mark-green); }
-.cell.c-yellow { background-color: var(--mark-yellow); }
-.cell.c-purple { background-color: var(--mark-purple); }
-.cell.c-red { background-color: var(--mark-red); }
-.cell.c-orange { background-color: var(--mark-orange); }
-.cell.c-pink { background-color: var(--mark-pink); }
-
-/* Softer Overlay Highlights */
-.cell.highlighted::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-color: var(--highlight-tint);
-  pointer-events: none;
-}
-
-.cell.same-number::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-color: var(--same-num-tint);
-  pointer-events: none;
-}
-
-.cell.selected {
-  box-shadow: inset 0 0 0 3px var(--accent);
-}
-
-.cell.given { color: var(--text-muted); font-weight: 500; }
-.cell.user-entry { color: var(--user-digit); }
-.cell.error { color: var(--error-color); background-color: rgba(248, 113, 113, 0.2) !important; }
-
-/* Completion Pulse Overlay & Animation */
-.cell.completed-pulse::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-color: var(--completion-glow);
-  pointer-events: none;
-  z-index: 20;
-  animation: pulseFlash 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  animation-delay: calc(var(--delay-step, 0) * 0.06s);
-}
-
-@keyframes pulseFlash {
-  0% {
-    opacity: 0;
-    transform: scale(0.85);
-  }
-  30% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(1);
+const BASE_SOLUTION = [
+  [5, 3, 4, 6, 7, 8, 9, 1, 2],
+  [6, 7, 2, 1, 9, 5, 3, 4, 8],
+  [1, 9, 8, 3, 4, 2, 5, 6, 7],
+  [8, 5, 9, 7, 6, 1, 4, 2, 3],
+  [4, 2, 6, 8, 5, 3, 7, 9, 1],
+  [7, 1, 3, 9, 2, 4, 8, 5, 6],
+  [9, 6, 1, 5, 3, 7, 2, 8, 4],
+  [2, 8, 7, 4, 1, 9, 6, 3, 5],
+  [3, 4, 5, 2, 8, 6, 1, 7, 9]
+];
+
+// State Variables
+let activeStream = 'classic'; 
+let selectedVariant = 'classic'; 
+let selectedClues = 34; 
+
+let solutionMatrix = [];
+let boardState = [];
+let givensMask = [];
+let notesState = [];
+let colorsState = [];
+let moveHistory = [];
+let thermometers = []; 
+
+let selectedIdx = null;
+let currentMode = 'digit'; 
+let activeColor = 'c-blue';
+
+// Limits & Counters
+let hintsRemaining = 5;
+let mistakesCount = 0;
+const maxMistakes = 3;
+
+// Settings State
+let settingsSound = true;
+let settingsAutoErase = true;
+let settingsShowCounts = true;
+let settingsHighlightErrors = false;
+
+// Timer State
+let timerInterval = null;
+let secondsElapsed = 0;
+let isPaused = false;
+let pausedBySettings = false;
+
+// DOM Element References (Initialized on DOMContentLoaded)
+let landingScreenEl, classicSelectScreenEl, challengeSelectScreenEl, challengeDiffScreenEl, gameScreenEl;
+let btnModeClassic, btnModeChallenge, btnResumeSaved, resumeDesc;
+let btnBackClassic, btnBackChallenge, btnBackChallengeDiff, menuBtn;
+let challengeDiffTitle;
+let timerEl, pauseBtn, pauseOverlayEl, resumeBtn, btnRulesPause;
+let boardEl, svgOverlayEl, numpadEl, eraseBtn, undoBtn;
+let modeDigitBtn, modePencilBtn, modeColorBtn, colorPaletteEl;
+let btnHint, hintCountEl, hintModal, closeHintBtn, confirmHintBtn, hintMessageEl;
+let mistakesBox, mistakesCountEl, gameoverModal, btnGameoverMenu;
+let rulesModal, closeRulesBtn, dismissRulesBtn;
+let settingsBtnLanding, settingsBtnGame, settingsModal, closeSettingsBtn;
+let toggleDarkMode, toggleSound, toggleAutoErase, toggleDigitCounts, toggleHighlightErrors;
+let statsBtnLanding, statsModal, closeStatsBtn;
+
+function initDOMReferences() {
+  landingScreenEl = document.getElementById('landing-screen');
+  classicSelectScreenEl = document.getElementById('classic-select-screen');
+  challengeSelectScreenEl = document.getElementById('challenge-select-screen');
+  challengeDiffScreenEl = document.getElementById('challenge-diff-screen');
+  gameScreenEl = document.getElementById('game-screen');
+
+  btnModeClassic = document.getElementById('btn-mode-classic');
+  btnModeChallenge = document.getElementById('btn-mode-challenge');
+  btnResumeSaved = document.getElementById('btn-resume-saved');
+  resumeDesc = document.getElementById('resume-desc');
+
+  btnBackClassic = document.getElementById('btn-back-classic');
+  btnBackChallenge = document.getElementById('btn-back-challenge');
+  btnBackChallengeDiff = document.getElementById('btn-back-challenge-diff');
+  menuBtn = document.getElementById('btn-menu');
+
+  challengeDiffTitle = document.getElementById('challenge-diff-title');
+
+  timerEl = document.getElementById('timer');
+  pauseBtn = document.getElementById('btn-pause');
+  pauseOverlayEl = document.getElementById('pause-overlay');
+  resumeBtn = document.getElementById('btn-resume');
+  btnRulesPause = document.getElementById('btn-rules-pause');
+
+  boardEl = document.getElementById('sudoku-board');
+  svgOverlayEl = document.getElementById('svg-overlay');
+  numpadEl = document.getElementById('numpad');
+  eraseBtn = document.getElementById('btn-erase');
+  undoBtn = document.getElementById('btn-undo');
+
+  modeDigitBtn = document.getElementById('btn-mode-digit');
+  modePencilBtn = document.getElementById('btn-mode-pencil');
+  modeColorBtn = document.getElementById('btn-mode-color');
+  colorPaletteEl = document.getElementById('color-palette');
+
+  btnHint = document.getElementById('btn-hint');
+  hintCountEl = document.getElementById('hint-count');
+  hintModal = document.getElementById('hint-modal');
+  closeHintBtn = document.getElementById('btn-close-hint');
+  confirmHintBtn = document.getElementById('btn-confirm-hint');
+  hintMessageEl = document.getElementById('hint-message');
+
+  mistakesBox = document.getElementById('mistakes-box');
+  mistakesCountEl = document.getElementById('mistakes-count');
+  gameoverModal = document.getElementById('gameover-modal');
+  btnGameoverMenu = document.getElementById('btn-gameover-menu');
+
+  rulesModal = document.getElementById('rules-modal');
+  closeRulesBtn = document.getElementById('btn-close-rules');
+  dismissRulesBtn = document.getElementById('btn-dismiss-rules');
+
+  settingsBtnLanding = document.getElementById('btn-landing-settings');
+  settingsBtnGame = document.getElementById('btn-settings-game');
+  settingsModal = document.getElementById('settings-modal');
+  closeSettingsBtn = document.getElementById('btn-close-settings');
+  toggleDarkMode = document.getElementById('toggle-dark-mode');
+  toggleSound = document.getElementById('toggle-sound');
+  toggleAutoErase = document.getElementById('toggle-auto-erase');
+  toggleDigitCounts = document.getElementById('toggle-digit-counts');
+  toggleHighlightErrors = document.getElementById('toggle-highlight-errors');
+
+  statsBtnLanding = document.getElementById('btn-landing-stats');
+  statsModal = document.getElementById('stats-modal');
+  closeStatsBtn = document.getElementById('btn-close-stats');
+}
+
+// --- PERSISTENT SAVE STATE ENGINE ---
+function saveGameToStorage() {
+  try {
+    const gameState = {
+      boardState,
+      givensMask,
+      solutionMatrix,
+      notesState: notesState.map(row => row.map(set => Array.from(set))),
+      colorsState,
+      thermometers,
+      secondsElapsed,
+      hintsRemaining,
+      mistakesCount,
+      selectedVariant,
+      selectedClues
+    };
+    localStorage.setItem('sudoku-active-game', JSON.stringify(gameState));
+  } catch (e) {}
+}
+
+function loadGameFromStorage() {
+  const saved = localStorage.getItem('sudoku-active-game');
+  if (!saved) return null;
+  try {
+    return JSON.parse(saved);
+  } catch (e) {
+    clearSavedGame();
+    return null;
   }
 }
 
-/* Pencil Notes */
-.pencil-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-  width: 100%;
-  height: 100%;
-  padding: 1px;
+function clearSavedGame() {
+  localStorage.removeItem('sudoku-active-game');
 }
 
-.pencil-digit {
-  font-size: 0.5rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+function checkActiveSaveStateOnLanding() {
+  try {
+    const saved = loadGameFromStorage();
+    if (saved && btnResumeSaved && resumeDesc) {
+      btnResumeSaved.classList.remove('hidden');
+      const modeName = saved.selectedVariant === 'classic' ? 'Classic' : `Challenge (${saved.selectedVariant})`;
+      resumeDesc.textContent = `${modeName} — Time: ${Math.floor((saved.secondsElapsed || 0) / 60)}m ${(saved.secondsElapsed || 0) % 60}s`;
+    } else if (btnResumeSaved) {
+      btnResumeSaved.classList.add('hidden');
+    }
+  } catch (e) {
+    clearSavedGame();
+    if (btnResumeSaved) btnResumeSaved.classList.add('hidden');
+  }
 }
 
-/* Mode Bar & Palette */
-.mode-bar {
-  display: flex;
-  gap: 4px;
-  background: var(--card-bg);
-  padding: 3px;
-  border-radius: 8px;
-  border: 1px solid var(--border-subtle);
+// --- WEB AUDIO SYNTHESIZER ---
+let audioCtx = null;
+
+function playCompletionChime() {
+  if (!settingsSound) return;
+  try {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+
+    const now = audioCtx.currentTime;
+    
+    [783.99, 987.77, 1174.66].forEach((freq, index) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + index * 0.1);
+
+      gain.gain.setValueAtTime(0, now + index * 0.1);
+      gain.gain.linearRampToValueAtTime(0.06, now + index * 0.1 + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + index * 0.1 + 1.2);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start(now + index * 0.1);
+      osc.stop(now + index * 0.1 + 1.25);
+    });
+  } catch (e) {}
 }
 
-.mode-btn {
-  flex: 1;
-  background: transparent;
-  color: var(--text-muted);
-  border: none;
-  padding: 6px 0;
-  font-weight: 600;
-  font-size: 0.8rem;
-  border-radius: 6px;
-  cursor: pointer;
+// --- SETTINGS ENGINE ---
+function initSettings() {
+  try {
+    const savedTheme = localStorage.getItem('sudoku-theme');
+    const isDark = savedTheme !== 'light';
+    document.body.classList.toggle('light-mode', !isDark);
+    if (toggleDarkMode) toggleDarkMode.checked = isDark;
+
+    settingsSound = localStorage.getItem('sudoku-sound') !== 'false';
+    if (toggleSound) toggleSound.checked = settingsSound;
+
+    settingsAutoErase = localStorage.getItem('sudoku-auto-erase') !== 'false';
+    if (toggleAutoErase) toggleAutoErase.checked = settingsAutoErase;
+
+    settingsShowCounts = localStorage.getItem('sudoku-show-counts') !== 'false';
+    if (toggleDigitCounts) toggleDigitCounts.checked = settingsShowCounts;
+
+    settingsHighlightErrors = localStorage.getItem('sudoku-highlight-errors') === 'true';
+    if (toggleHighlightErrors) toggleHighlightErrors.checked = settingsHighlightErrors;
+    updateMistakesUI();
+  } catch (e) {}
 }
 
-.mode-btn.active {
-  background: var(--accent);
-  color: #0f172a;
+function attachEventListeners() {
+  if (toggleDarkMode) {
+    toggleDarkMode.addEventListener('change', (e) => {
+      const isDark = e.target.checked;
+      document.body.classList.toggle('light-mode', !isDark);
+      localStorage.setItem('sudoku-theme', isDark ? 'dark' : 'light');
+    });
+  }
+
+  if (toggleSound) {
+    toggleSound.addEventListener('change', (e) => {
+      settingsSound = e.target.checked;
+      localStorage.setItem('sudoku-sound', settingsSound);
+    });
+  }
+
+  if (toggleAutoErase) {
+    toggleAutoErase.addEventListener('change', (e) => {
+      settingsAutoErase = e.target.checked;
+      localStorage.setItem('sudoku-auto-erase', settingsAutoErase);
+    });
+  }
+
+  if (toggleDigitCounts) {
+    toggleDigitCounts.addEventListener('change', (e) => {
+      settingsShowCounts = e.target.checked;
+      localStorage.setItem('sudoku-show-counts', settingsShowCounts);
+      updateDigitCounts();
+    });
+  }
+
+  if (toggleHighlightErrors) {
+    toggleHighlightErrors.addEventListener('change', (e) => {
+      settingsHighlightErrors = e.target.checked;
+      localStorage.setItem('sudoku-highlight-errors', settingsHighlightErrors);
+      updateMistakesUI();
+      renderBoard();
+    });
+  }
+
+  if (settingsBtnLanding) settingsBtnLanding.addEventListener('click', openSettings);
+  if (settingsBtnGame) settingsBtnGame.addEventListener('click', openSettings);
+  if (closeSettingsBtn) closeSettingsBtn.addEventListener('click', closeSettings);
+  if (settingsModal) {
+    settingsModal.addEventListener('click', (e) => {
+      if (e.target === settingsModal) closeSettings();
+    });
+  }
+
+  if (statsBtnLanding) statsBtnLanding.addEventListener('click', () => statsModal.classList.remove('hidden'));
+  if (closeStatsBtn) closeStatsBtn.addEventListener('click', () => statsModal.classList.add('hidden'));
+  if (statsModal) {
+    statsModal.addEventListener('click', (e) => {
+      if (e.target === statsModal) statsModal.classList.add('hidden');
+    });
+  }
+
+  if (closeRulesBtn) closeRulesBtn.addEventListener('click', closeRules);
+  if (dismissRulesBtn) dismissRulesBtn.addEventListener('click', closeRules);
+  if (btnRulesPause) btnRulesPause.addEventListener('click', openRules);
+
+  if (btnHint) btnHint.addEventListener('click', openHintModal);
+  if (closeHintBtn) closeHintBtn.addEventListener('click', closeHintModal);
+  if (confirmHintBtn) confirmHintBtn.addEventListener('click', triggerHint);
+  if (hintModal) {
+    hintModal.addEventListener('click', (e) => {
+      if (e.target === hintModal) closeHintModal();
+    });
+  }
+
+  if (btnGameoverMenu) {
+    btnGameoverMenu.addEventListener('click', () => {
+      clearSavedGame();
+      gameoverModal.classList.add('hidden');
+      showLandingScreen();
+    });
+  }
+
+  if (pauseBtn) pauseBtn.addEventListener('click', togglePause);
+  if (resumeBtn) resumeBtn.addEventListener('click', resumeGame);
+
+  if (btnModeClassic) {
+    btnModeClassic.addEventListener('click', () => {
+      if (loadGameFromStorage()) {
+        if (!confirm("Starting a new game will forfeit your current active game. Continue?")) return;
+      }
+      clearSavedGame();
+      activeStream = 'classic';
+      selectedVariant = 'classic';
+      hideAllScreens();
+      if (classicSelectScreenEl) classicSelectScreenEl.classList.remove('hidden');
+    });
+  }
+
+  if (btnModeChallenge) {
+    btnModeChallenge.addEventListener('click', () => {
+      if (loadGameFromStorage()) {
+        if (!confirm("Starting a new game will forfeit your current active game. Continue?")) return;
+      }
+      clearSavedGame();
+      activeStream = 'challenge';
+      hideAllScreens();
+      if (challengeSelectScreenEl) challengeSelectScreenEl.classList.remove('hidden');
+    });
+  }
+
+  if (btnResumeSaved) {
+    btnResumeSaved.addEventListener('click', () => {
+      const saved = loadGameFromStorage();
+      if (saved) {
+        resumeSavedGame(saved);
+      }
+    });
+  }
+
+  if (btnBackClassic) btnBackClassic.addEventListener('click', showLandingScreen);
+  if (btnBackChallenge) btnBackChallenge.addEventListener('click', showLandingScreen);
+  if (btnBackChallengeDiff) {
+    btnBackChallengeDiff.addEventListener('click', () => {
+      hideAllScreens();
+      if (challengeSelectScreenEl) challengeSelectScreenEl.classList.remove('hidden');
+    });
+  }
+  if (menuBtn) menuBtn.addEventListener('click', showLandingScreen);
+
+  document.querySelectorAll('.diff-option-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      selectedClues = parseInt(btn.dataset.difficulty, 10);
+      startNewGame();
+    });
+  });
+
+  document.querySelectorAll('.variant-option-card:not(.disabled)').forEach(card => {
+    card.addEventListener('click', () => {
+      selectedVariant = card.dataset.variant;
+      const variantNames = { thermometer: 'Thermometer', knight: 'Knight Move', irregular: 'Irregular Jigsaw' };
+      if (challengeDiffTitle) challengeDiffTitle.textContent = variantNames[selectedVariant] || 'Challenge';
+      hideAllScreens();
+      if (challengeDiffScreenEl) challengeDiffScreenEl.classList.remove('hidden');
+    });
+  });
+
+  document.querySelectorAll('.challenge-diff-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      selectedClues = parseInt(btn.dataset.difficulty, 10);
+      startNewGame();
+    });
+  });
+
+  if (modeDigitBtn) modeDigitBtn.addEventListener('click', () => setMode('digit'));
+  if (modePencilBtn) modePencilBtn.addEventListener('click', () => setMode('pencil'));
+  if (modeColorBtn) modeColorBtn.addEventListener('click', () => setMode('color'));
+
+  if (colorPaletteEl) {
+    colorPaletteEl.addEventListener('click', (e) => {
+      const swatch = e.target.closest('.color-swatch');
+      if (!swatch) return;
+      document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+      swatch.classList.add('active');
+      activeColor = swatch.dataset.color;
+    });
+  }
+
+  if (numpadEl) {
+    numpadEl.addEventListener('click', (e) => {
+      const btn = e.target.closest('.num-btn');
+      if (!btn) return;
+      enterDigit(parseInt(btn.dataset.value, 10));
+    });
+  }
+
+  if (eraseBtn) eraseBtn.addEventListener('click', () => enterDigit(0));
+  if (undoBtn) undoBtn.addEventListener('click', undo);
+
+  document.addEventListener('click', (e) => {
+    const isCell = e.target.closest('.cell');
+    const isButton = e.target.closest('button, select, .color-swatch, .modal-card');
+    if (!isCell && !isButton && selectedIdx !== null) {
+      selectedIdx = null;
+      renderBoard();
+    }
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (settingsModal && !settingsModal.classList.contains('hidden')) closeSettings();
+      else if (statsModal && !statsModal.classList.contains('hidden')) statsModal.classList.add('hidden');
+      else if (rulesModal && !rulesModal.classList.contains('hidden')) closeRules();
+      else if (hintModal && !hintModal.classList.contains('hidden')) closeHintModal();
+      else if (isPaused) resumeGame();
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+      e.preventDefault();
+      undo();
+      return;
+    }
+    if (e.key >= '1' && e.key <= '9') enterDigit(parseInt(e.key, 10));
+    if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') enterDigit(0);
+  });
 }
 
-body.light-mode .mode-btn.active {
-  color: #ffffff;
+function updateMistakesUI() {
+  if (mistakesBox && mistakesCountEl) {
+    mistakesBox.classList.toggle('hidden', !settingsHighlightErrors);
+    mistakesCountEl.textContent = mistakesCount;
+  }
 }
 
-.color-palette {
-  display: flex;
-  justify-content: space-around;
-  background: var(--card-bg);
-  padding: 5px;
-  border-radius: 8px;
-  border: 1px solid var(--border-subtle);
+function openSettings() {
+  if (!isPaused && gameScreenEl.classList.contains('hidden')) {
+    pausedBySettings = false;
+  } else if (!isPaused) {
+    isPaused = true;
+    pausedBySettings = true;
+  }
+  settingsModal.classList.remove('hidden');
 }
 
-.color-palette.hidden { display: none; }
-
-.color-swatch {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  cursor: pointer;
+function closeSettings() {
+  settingsModal.classList.add('hidden');
+  if (pausedBySettings) {
+    pausedBySettings = false;
+    isPaused = false;
+  }
 }
 
-.color-swatch.active { border-color: var(--text-main); transform: scale(1.15); }
-.color-swatch.c-blue { background: #38bdf8; }
-.color-swatch.c-green { background: #4ade80; }
-.color-swatch.c-yellow { background: #facc15; }
-.color-swatch.c-purple { background: #c084fc; }
-.color-swatch.c-red { background: #dc2626; }
-.color-swatch.c-orange { background: #fb923c; }
-.color-swatch.c-pink { background: #fbcfe8; }
-.color-swatch.c-clear { background: var(--border-subtle); color: var(--text-main); font-weight: bold; }
+function openRules() { rulesModal.classList.remove('hidden'); }
+function closeRules() { rulesModal.classList.add('hidden'); }
 
-/* Numpad Grid & Remaining Counter Badges */
-.numpad {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 5px;
+function openHintModal() {
+  if (hintsRemaining <= 0) {
+    hintMessageEl.textContent = "You have no hints remaining for this game!";
+    confirmHintBtn.style.display = 'none';
+  } else {
+    hintMessageEl.textContent = `Would you like a logical guide hint? You have [${hintsRemaining}] remaining.`;
+    confirmHintBtn.style.display = 'block';
+  }
+  hintModal.classList.remove('hidden');
 }
 
-.num-btn {
-  position: relative;
-  background: var(--card-bg);
-  color: var(--text-main);
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  font-size: 1.15rem;
-  font-weight: 700;
-  padding: 8px 0;
-  cursor: pointer;
-  text-align: center;
-  transition: opacity 0.2s ease, transform 0.1s ease;
+function closeHintModal() {
+  hintModal.classList.add('hidden');
 }
 
-.num-btn.completed {
-  opacity: 0.3;
+function triggerHint() {
+  if (hintsRemaining <= 0) return;
+  hintsRemaining--;
+  hintCountEl.textContent = hintsRemaining;
+  closeHintModal();
+  saveGameToStorage();
+
+  for (let r = 0; r < 9; r++) {
+    for (let c = 0; c < 9; c++) {
+      if (boardState[r][c] !== 0 && !givensMask[r][c] && hasConflict(r, c)) {
+        selectedIdx = r * 9 + c;
+        renderBoard();
+        alert(`💡 Logical Guide: Cell at Row ${r + 1}, Col ${c + 1} violates a rule constraint.`);
+        return;
+      }
+    }
+  }
+
+  if (selectedVariant === 'thermometer' && thermometers.length > 0) {
+    const thermo = thermometers[Math.floor(Math.random() * thermometers.length)];
+    const bulb = thermo[0];
+    const maxPossibleAtBulb = 10 - thermo.length;
+
+    selectedIdx = bulb.r * 9 + bulb.c;
+    renderBoard();
+
+    if (boardState[bulb.r][bulb.c] === 0) {
+      alert(`💡 Logical Guide: Look at the thermometer bulb at Row ${bulb.r + 1}, Col ${bulb.c + 1}. Because this thermometer is ${thermo.length} cells long, the bulb cannot exceed ${maxPossibleAtBulb}.`);
+      return;
+    }
+  }
+
+  for (let r = 0; r < 9; r++) {
+    for (let c = 0; c < 9; c++) {
+      if (boardState[r][c] === 0 && !givensMask[r][c]) {
+        selectedIdx = r * 9 + c;
+        renderBoard();
+        alert(`💡 Logical Guide: Examine Row ${r + 1}, Col ${c + 1}. Check its 3x3 box and intersecting row/column candidates.`);
+        return;
+      }
+    }
+  }
 }
 
-.digit-count {
-  position: absolute;
-  top: 2px;
-  right: 4px;
-  font-size: 0.55rem;
-  font-weight: 700;
-  color: var(--accent);
-  pointer-events: none;
+function startTimer() {
+  clearInterval(timerInterval);
+  isPaused = false;
+  pausedBySettings = false;
+  if (pauseOverlayEl) pauseOverlayEl.classList.add('hidden');
+  if (pauseBtn) pauseBtn.textContent = '⏸';
+  updateTimerDisplay();
+
+  timerInterval = setInterval(() => {
+    if (!isPaused) {
+      secondsElapsed++;
+      updateTimerDisplay();
+      saveGameToStorage();
+    }
+  }, 1000);
 }
 
-.btn-erase-slot { color: var(--error-color); }
-
-/* Rules Modal Styling */
-.rules-text {
-  font-size: 0.85rem;
-  color: var(--text-main);
-  line-height: 1.45;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+function updateTimerDisplay() {
+  if (timerEl) {
+    const mins = Math.floor(secondsElapsed / 60);
+    const secs = secondsElapsed % 60;
+    timerEl.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  }
 }
 
-/* Modals (Settings, Stats, Rules, Hint, GameOver) */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 100;
-  padding: 16px;
+function pauseGame() {
+  if (isPaused && !pausedBySettings) return;
+  isPaused = true;
+  if (pauseOverlayEl) pauseOverlayEl.classList.remove('hidden');
+  if (pauseBtn) pauseBtn.textContent = '▶';
 }
 
-.modal-backdrop.hidden { display: none; }
-
-.modal-card {
-  background: var(--card-bg);
-  border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  width: 100%;
-  max-width: 320px;
-  padding: 16px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+function resumeGame() {
+  isPaused = false;
+  pausedBySettings = false;
+  if (pauseOverlayEl) pauseOverlayEl.classList.add('hidden');
+  if (pauseBtn) pauseBtn.textContent = '⏸';
 }
 
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
+function togglePause() {
+  if (isPaused) resumeGame(); else pauseGame();
 }
 
-.modal-header h2 {
-  font-size: 1.15rem;
-  color: var(--accent);
+function hideAllScreens() {
+  if (landingScreenEl) landingScreenEl.classList.add('hidden');
+  if (classicSelectScreenEl) classicSelectScreenEl.classList.add('hidden');
+  if (challengeSelectScreenEl) challengeSelectScreenEl.classList.add('hidden');
+  if (challengeDiffScreenEl) challengeDiffScreenEl.classList.add('hidden');
+  if (gameScreenEl) gameScreenEl.classList.add('hidden');
 }
 
-.btn-close {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  font-size: 1.1rem;
-  font-weight: bold;
-  cursor: pointer;
+function showLandingScreen() {
+  clearInterval(timerInterval);
+  saveGameToStorage();
+  hideAllScreens();
+  checkActiveSaveStateOnLanding();
+  if (landingScreenEl) landingScreenEl.classList.remove('hidden');
 }
 
-.modal-body {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+function startNewGame() {
+  clearSavedGame();
+  hintsRemaining = 5;
+  if (hintCountEl) hintCountEl.textContent = hintsRemaining;
+  mistakesCount = 0;
+  secondsElapsed = 0;
+  updateMistakesUI();
+
+  hideAllScreens();
+  if (gameScreenEl) gameScreenEl.classList.remove('hidden');
+  
+  generateNewPuzzle();
+  renderBoard();
+  startTimer();
+  saveGameToStorage();
+
+  if (selectedVariant !== 'classic') {
+    openRules();
+  }
 }
 
-.setting-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 4px 0;
+function resumeSavedGame(saved) {
+  boardState = saved.boardState && saved.boardState.length === 9 ? saved.boardState : Array.from({ length: 9 }, () => Array(9).fill(0));
+  givensMask = saved.givensMask && saved.givensMask.length === 9 ? saved.givensMask : Array.from({ length: 9 }, () => Array(9).fill(false));
+  solutionMatrix = saved.solutionMatrix && saved.solutionMatrix.length === 9 ? saved.solutionMatrix : BASE_SOLUTION;
+  
+  notesState = saved.notesState && saved.notesState.length === 9 
+    ? saved.notesState.map(row => row.map(arr => new Set(arr || []))) 
+    : Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => new Set()));
+    
+  colorsState = saved.colorsState && saved.colorsState.length === 9 ? saved.colorsState : Array.from({ length: 9 }, () => Array(9).fill(null));
+  thermometers = saved.thermometers || [];
+  secondsElapsed = saved.secondsElapsed || 0;
+  hintsRemaining = saved.hintsRemaining ?? 5;
+  mistakesCount = saved.mistakesCount || 0;
+  selectedVariant = saved.selectedVariant || 'classic';
+  selectedClues = saved.selectedClues || 34;
+
+  if (hintCountEl) hintCountEl.textContent = hintsRemaining;
+  updateMistakesUI();
+
+  hideAllScreens();
+  if (gameScreenEl) gameScreenEl.classList.remove('hidden');
+  renderThermometersSVG();
+  renderBoard();
+  startTimer();
 }
 
-.setting-label {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--text-main);
+function generateThermometersForSolution() {
+  thermometers = [];
+  const occupiedCells = new Set();
+  const targetCount = selectedClues === 0 ? 5 : 4; 
+
+  const directions = [
+    { dr: -1, dc: 0 }, { dr: 1, dc: 0 }, { dr: 0, dc: -1 }, { dr: 0, dc: 1 },
+    { dr: -1, dc: -1 }, { dr: -1, dc: 1 }, { dr: 1, dc: -1 }, { dr: 1, dc: 1 }
+  ];
+
+  for (let attempt = 0; attempt < 120 && thermometers.length < targetCount; attempt++) {
+    const startR = Math.floor(Math.random() * 9);
+    const startC = Math.floor(Math.random() * 9);
+    const key = `${startR},${startC}`;
+
+    if (occupiedCells.has(key)) continue;
+
+    const path = [{ r: startR, c: startC }];
+    let currR = startR;
+    let currC = startC;
+    let currVal = solutionMatrix[currR][currC];
+
+    const isLong = Math.random() < 0.35;
+    const targetLength = isLong ? (Math.floor(Math.random() * 2) + 7) : (Math.floor(Math.random() * 3) + 3);
+
+    for (let step = 0; step < targetLength - 1; step++) {
+      const validNeighbors = [];
+      directions.forEach(d => {
+        const nr = currR + d.dr;
+        const nc = currC + d.dc;
+        if (nr >= 0 && nr < 9 && nc >= 0 && nc < 9) {
+          if (!path.some(p => p.r === nr && p.c === nc)) {
+            const nextVal = solutionMatrix[nr][nc];
+            if (nextVal > currVal) {
+              validNeighbors.push({ r: nr, c: nc, val: nextVal });
+            }
+          }
+        }
+      });
+
+      if (validNeighbors.length === 0) break;
+
+      validNeighbors.sort((a, b) => a.val - b.val);
+      const chosen = validNeighbors[0];
+
+      path.push({ r: chosen.r, c: chosen.c });
+      currR = chosen.r;
+      currC = chosen.c;
+      currVal = chosen.val;
+    }
+
+    if (path.length >= 3) {
+      let tooClose = false;
+      for (const existingPath of thermometers) {
+        for (const p1 of path) {
+          for (const p2 of existingPath) {
+            const dist = Math.max(Math.abs(p1.r - p2.r), Math.abs(p1.c - p2.c));
+            if (dist === 1 && !path.some(x => x.r === p2.r && x.c === p2.c)) {
+              tooClose = true;
+            }
+          }
+        }
+      }
+
+      if (!tooClose) {
+        thermometers.push(path);
+        path.forEach(p => occupiedCells.add(`${p.r},${p.c}`));
+      }
+    }
+  }
 }
 
-/* Stats UI Cards */
-.stat-box {
-  background: var(--bg-color);
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  padding: 12px;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
+function renderThermometersSVG() {
+  if (!svgOverlayEl) return;
+  svgOverlayEl.innerHTML = '';
+  if (selectedVariant !== 'thermometer' || thermometers.length === 0) return;
+
+  const cellSize = 100 / 9;
+
+  thermometers.forEach(path => {
+    if (path.length === 0) return;
+
+    if (path.length > 1) {
+      let pathData = '';
+      path.forEach((pt, idx) => {
+        const x = pt.c * cellSize + cellSize / 2;
+        const y = pt.r * cellSize + cellSize / 2;
+        if (idx === 0) pathData += `M ${x} ${y}`;
+        else pathData += ` L ${x} ${y}`;
+      });
+
+      const strokePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      strokePath.setAttribute('d', pathData);
+      strokePath.setAttribute('stroke', 'var(--thermo-stem)');
+      strokePath.setAttribute('stroke-width', '2.8');
+      strokePath.setAttribute('fill', 'none');
+      strokePath.setAttribute('stroke-linecap', 'round');
+      strokePath.setAttribute('stroke-linejoin', 'round');
+      svgOverlayEl.appendChild(strokePath);
+    }
+
+    const bulbPt = path[0];
+    const bulbX = bulbPt.c * cellSize + cellSize / 2;
+    const bulbY = bulbPt.r * cellSize + cellSize / 2;
+
+    const bulbCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    bulbCircle.setAttribute('cx', bulbX);
+    bulbCircle.setAttribute('cy', bulbY);
+    bulbCircle.setAttribute('r', '3.8');
+    bulbCircle.setAttribute('fill', 'var(--thermo-bulb)');
+    bulbCircle.setAttribute('stroke', 'var(--border-strong)');
+    bulbCircle.setAttribute('stroke-width', '0.5');
+    svgOverlayEl.appendChild(bulbCircle);
+  });
 }
 
-.stat-number {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--accent);
+function generateNewPuzzle() {
+  const cluesCount = selectedClues;
+  
+  const digitMap = [1, 2, 3, 4, 5, 6, 7, 8, 9].sort(() => Math.random() - 0.5);
+  let permuted = BASE_SOLUTION.map(row => row.map(val => digitMap[val - 1]));
+
+  for (let band = 0; band < 3; band++) {
+    let rows = [0, 1, 2].sort(() => Math.random() - 0.5);
+    let bandRows = rows.map(r => permuted[band * 3 + r]);
+    for (let r = 0; r < 3; r++) permuted[band * 3 + r] = bandRows[r];
+  }
+
+  if (Math.random() > 0.5) {
+    permuted = permuted[0].map((_, colIdx) => permuted.map(row => row[colIdx]));
+  }
+
+  solutionMatrix = permuted;
+
+  givensMask = Array.from({ length: 9 }, () => Array(9).fill(false));
+  boardState = Array.from({ length: 9 }, () => Array(9).fill(0));
+  notesState = Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => new Set()));
+  colorsState = Array.from({ length: 9 }, () => Array(9).fill(null));
+  moveHistory = [];
+
+  if (selectedVariant === 'thermometer') {
+    generateThermometersForSolution();
+  } else {
+    thermometers = [];
+  }
+
+  let placedClues = 0;
+  while (placedClues < cluesCount) {
+    let r = Math.floor(Math.random() * 9);
+    let c = Math.floor(Math.random() * 9);
+    if (!givensMask[r][c]) {
+      givensMask[r][c] = true;
+      boardState[r][c] = solutionMatrix[r][c];
+      placedClues++;
+    }
+  }
+
+  renderThermometersSVG();
 }
 
-.stat-label {
-  font-size: 0.75rem;
-  color: var(--text-muted);
+function hasConflict(r, c) {
+  const val = boardState[r][c];
+  if (val === 0) return false;
+
+  for (let i = 0; i < 9; i++) {
+    if (i !== c && boardState[r][i] === val) return true;
+    if (i !== r && boardState[i][c] === val) return true;
+  }
+
+  const boxStartRow = Math.floor(r / 3) * 3;
+  const boxStartCol = Math.floor(c / 3) * 3;
+  for (let br = 0; br < 3; br++) {
+    for (let bc = 0; bc < 3; bc++) {
+      const row = boxStartRow + br;
+      const col = boxStartCol + bc;
+      if ((row !== r || col !== c) && boardState[row][col] === val) {
+        return true;
+      }
+    }
+  }
+
+  if (selectedVariant === 'thermometer') {
+    for (const path of thermometers) {
+      for (let i = 0; i < path.length - 1; i++) {
+        const currCell = path[i];
+        const nextCell = path[i + 1];
+        const v1 = boardState[currCell.r][currCell.c];
+        const v2 = boardState[nextCell.r][nextCell.c];
+
+        if (v1 !== 0 && v2 !== 0 && v1 >= v2) {
+          if ((currCell.r === r && currCell.c === c) || (nextCell.r === r && nextCell.c === c)) {
+            return true;
+          }
+        }
+      }
+    }
+  }
+
+  return false;
 }
 
-.stat-row-dual {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
+function checkAndTriggerCompletions(r, c) {
+  if (!boardEl) return;
+  let rowSet = new Set(), rowValid = true;
+  for (let i = 0; i < 9; i++) {
+    const v = boardState[r][i];
+    if (v === 0 || rowSet.has(v) || hasConflict(r, i)) { rowValid = false; break; }
+    rowSet.add(v);
+  }
+
+  let colSet = new Set(), colValid = true;
+  for (let i = 0; i < 9; i++) {
+    const v = boardState[i][c];
+    if (v === 0 || colSet.has(v) || hasConflict(i, c)) { colValid = false; break; }
+    colSet.add(v);
+  }
+
+  let boxSet = new Set(), boxValid = true;
+  const boxStartRow = Math.floor(r / 3) * 3, boxStartCol = Math.floor(c / 3) * 3;
+  for (let br = 0; br < 3; br++) {
+    for (let bc = 0; bc < 3; bc++) {
+      const row = boxStartRow + br, col = boxStartCol + bc;
+      const v = boardState[row][col];
+      if (v === 0 || boxSet.has(v) || hasConflict(row, col)) { boxValid = false; break; }
+      boxSet.add(v);
+    }
+  }
+
+  let triggered = false;
+  if (rowValid) {
+    triggered = true;
+    for (let col = 0; col < 9; col++) {
+      const cell = boardEl.children[r * 9 + col];
+      if (cell) {
+        cell.style.setProperty('--delay-step', Math.abs(col - c));
+        cell.classList.add('completed-pulse');
+        setTimeout(() => cell.classList.remove('completed-pulse'), 1400);
+      }
+    }
+  }
+  if (colValid) {
+    triggered = true;
+    for (let row = 0; row < 9; row++) {
+      const cell = boardEl.children[row * 9 + c];
+      if (cell) {
+        cell.style.setProperty('--delay-step', Math.abs(row - r));
+        cell.classList.add('completed-pulse');
+        setTimeout(() => cell.classList.remove('completed-pulse'), 1400);
+      }
+    }
+  }
+  if (boxValid) {
+    triggered = true;
+    for (let br = 0; br < 3; br++) {
+      for (let bc = 0; bc < 3; bc++) {
+        const row = boxStartRow + br, col = boxStartCol + bc;
+        const cell = boardEl.children[row * 9 + col];
+        if (cell) {
+          const dist = Math.max(Math.abs(row - r), Math.abs(col - c));
+          cell.style.setProperty('--delay-step', dist);
+          cell.classList.add('completed-pulse');
+          setTimeout(() => cell.classList.remove('completed-pulse'), 1400);
+        }
+      }
+    }
+  }
+  if (triggered) playCompletionChime();
 }
 
-.stat-subcard {
-  background: var(--bg-color);
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  padding: 10px;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
+function updateDigitCounts() {
+  const counts = Array(10).fill(0);
+  for (let r = 0; r < 9; r++) {
+    for (let c = 0; c < 9; c++) {
+      const val = boardState[r][c];
+      if (val >= 1 && val <= 9) counts[val]++;
+    }
+  }
+
+  document.querySelectorAll('.num-btn[data-value]').forEach(btn => {
+    const digit = parseInt(btn.dataset.value, 10);
+    if (digit === 0) return;
+    const remaining = 9 - counts[digit];
+    const countSpan = btn.querySelector('.digit-count');
+    if (countSpan) {
+      countSpan.textContent = remaining > 0 ? remaining : '';
+      countSpan.style.display = settingsShowCounts && remaining > 0 ? 'inline' : 'none';
+    }
+    btn.classList.toggle('completed', remaining <= 0);
+  });
 }
 
-.stat-subnum {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--text-main);
+function renderBoard() {
+  if (!boardEl) return;
+  boardEl.innerHTML = '';
+  
+  const selRow = selectedIdx !== null ? Math.floor(selectedIdx / 9) : null;
+  const selCol = selectedIdx !== null ? selectedIdx % 9 : null;
+  const selectedVal = selectedIdx !== null ? boardState[selRow][selCol] : 0;
+
+  for (let r = 0; r < 9; r++) {
+    for (let c = 0; c < 9; c++) {
+      const idx = r * 9 + c;
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.row = r;
+      cell.dataset.col = c;
+
+      if (colorsState[r][c]) cell.classList.add(colorsState[r][c]);
+
+      const val = boardState[r][c];
+
+      if (val !== 0) {
+        cell.textContent = val;
+        if (givensMask[r][c]) {
+          cell.classList.add('given');
+        } else {
+          cell.classList.add('user-entry');
+          if (settingsHighlightErrors && hasConflict(r, c)) {
+            cell.classList.add('error');
+          }
+        }
+      } else if (notesState[r][c].size > 0) {
+        const pencilGrid = document.createElement('div');
+        pencilGrid.className = 'pencil-grid';
+        for (let d = 1; d <= 9; d++) {
+          const pencilCell = document.createElement('div');
+          pencilCell.className = 'pencil-digit';
+          if (notesState[r][c].has(d)) pencilCell.textContent = d;
+          pencilGrid.appendChild(pencilCell);
+        }
+        cell.appendChild(pencilGrid);
+      }
+
+      if (selectedIdx !== null) {
+        if (idx === selectedIdx) cell.classList.add('selected');
+        else {
+          if (selectedVal !== 0 && val === selectedVal) cell.classList.add('same-number');
+          else if (
+            r === selRow || c === selCol ||
+            (Math.floor(r / 3) === Math.floor(selRow / 3) && Math.floor(c / 3) === Math.floor(selCol / 3))
+          ) {
+            cell.classList.add('highlighted');
+          }
+        }
+      }
+
+      cell.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (isPaused) return;
+
+        if (selectedIdx === idx && currentMode !== 'color') {
+          selectedIdx = null;
+        } else {
+          selectedIdx = idx;
+          if (currentMode === 'color') {
+            const newColor = activeColor === 'clear' ? null : activeColor;
+            const prevColor = colorsState[r][c];
+            if (prevColor !== newColor) {
+              moveHistory.push({ type: 'color', r, c, prevColor, newColor });
+              colorsState[r][c] = newColor;
+            }
+          }
+        }
+        renderBoard();
+        saveGameToStorage();
+      });
+
+      boardEl.appendChild(cell);
+    }
+  }
+
+  updateDigitCounts();
 }
 
-.stat-sublabel {
-  font-size: 0.7rem;
-  color: var(--text-muted);
+function enterDigit(digit) {
+  if (selectedIdx === null || isPaused) return;
+  const r = Math.floor(selectedIdx / 9);
+  const c = selectedIdx % 9;
+
+  if (givensMask[r][c]) return;
+
+  const prevVal = boardState[r][c];
+  const prevNotes = new Set(notesState[r][c]);
+  const autoErasedNotes = [];
+
+  if (currentMode === 'digit') {
+    if (prevVal === digit) return;
+    boardState[r][c] = digit;
+    notesState[r][c].clear();
+
+    if (settingsHighlightErrors && digit !== 0) {
+      if (hasConflict(r, c) || digit !== solutionMatrix[r][c]) {
+        mistakesCount++;
+        updateMistakesUI();
+        if (mistakesCount >= maxMistakes) {
+          clearSavedGame();
+          pauseGame();
+          if (gameoverModal) gameoverModal.classList.remove('hidden');
+        }
+      }
+    }
+
+    if (settingsAutoErase && digit !== 0) {
+      const boxStartRow = Math.floor(r / 3) * 3;
+      const boxStartCol = Math.floor(c / 3) * 3;
+      for (let i = 0; i < 9; i++) {
+        if (notesState[r][i].has(digit)) { notesState[r][i].delete(digit); autoErasedNotes.push({ r, c: i, digit }); }
+        if (notesState[i][c].has(digit)) { notesState[i][c].delete(digit); autoErasedNotes.push({ r: i, c, digit }); }
+      }
+      for (let br = 0; br < 3; br++) {
+        for (let bc = 0; bc < 3; bc++) {
+          const row = boxStartRow + br, col = boxStartCol + bc;
+          if (notesState[row][col].has(digit)) { notesState[row][col].delete(digit); autoErasedNotes.push({ r: row, c: col, digit }); }
+        }
+      }
+    }
+  } else if (currentMode === 'pencil' && digit !== 0) {
+    boardState[r][c] = 0;
+    if (notesState[r][c].has(digit)) notesState[r][c].delete(digit);
+    else notesState[r][c].add(digit);
+  } else if (digit === 0) {
+    if (prevVal === 0 && prevNotes.size === 0) return;
+    boardState[r][c] = 0;
+    notesState[r][c].clear();
+  }
+
+  moveHistory.push({
+    type: 'cell', r, c, prevVal, newVal: boardState[r][c], prevNotes, newNotes: new Set(notesState[r][c]), autoErasedNotes
+  });
+
+  renderBoard();
+  saveGameToStorage();
+  if (digit !== 0 && currentMode === 'digit') checkAndTriggerCompletions(r, c);
 }
 
-/* Modern Bubble Toggle Switch */
-.toggle-switch {
-  position: relative;
-  display: inline-block;
-  width: 44px;
-  height: 24px;
+function undo() {
+  if (moveHistory.length === 0 || isPaused) return;
+  const lastMove = moveHistory.pop();
+
+  if (lastMove.type === 'cell') {
+    const { r, c } = lastMove;
+    boardState[r][c] = lastMove.prevVal;
+    notesState[r][c] = new Set(lastMove.prevNotes);
+    if (lastMove.autoErasedNotes) {
+      lastMove.autoErasedNotes.forEach(item => notesState[item.r][item.c].add(item.digit));
+    }
+    selectedIdx = r * 9 + c;
+  } else if (lastMove.type === 'color') {
+    const { r, c } = lastMove;
+    colorsState[r][c] = lastMove.prevColor;
+    selectedIdx = r * 9 + c;
+  }
+  renderBoard();
+  saveGameToStorage();
 }
 
-.toggle-switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
+function setMode(mode) {
+  currentMode = mode;
+  if (modeDigitBtn) modeDigitBtn.classList.toggle('active', mode === 'digit');
+  if (modePencilBtn) modePencilBtn.classList.toggle('active', mode === 'pencil');
+  if (modeColorBtn) modeColorBtn.classList.toggle('active', mode === 'color');
+  if (colorPaletteEl) colorPaletteEl.classList.toggle('hidden', mode !== 'color');
 }
 
-.toggle-slider {
-  position: absolute;
-  cursor: pointer;
-  inset: 0;
-  background-color: var(--border-subtle);
-  border-radius: 24px;
-  transition: 0.2s ease;
-}
-
-.toggle-slider::before {
-  position: absolute;
-  content: "";
-  height: 18px;
-  width: 18px;
-  left: 3px;
-  bottom: 3px;
-  background-color: var(--text-main);
-  border-radius: 50%;
-  transition: 0.2s ease;
-}
-
-input:checked + .toggle-slider {
-  background-color: var(--accent);
-}
-
-input:checked + .toggle-slider::before {
-  transform: translateX(20px);
-  background-color: #0f172a;
-}
+// --- DOMContentLoaded Initialization Guard ---
+document.addEventListener('DOMContentLoaded', () => {
+  initDOMReferences();
+  initSettings();
+  attachEventListeners();
+  checkActiveSaveStateOnLanding();
+  showLandingScreen();
+});

@@ -44,77 +44,87 @@ let secondsElapsed = 0;
 let isPaused = false;
 let pausedBySettings = false;
 
-// DOM Elements - Screens
-const landingScreenEl = document.getElementById('landing-screen');
-const classicSelectScreenEl = document.getElementById('classic-select-screen');
-const challengeSelectScreenEl = document.getElementById('challenge-select-screen');
-const challengeDiffScreenEl = document.getElementById('challenge-diff-screen');
-const gameScreenEl = document.getElementById('game-screen');
+// DOM Element References (Initialized on DOMContentLoaded)
+let landingScreenEl, classicSelectScreenEl, challengeSelectScreenEl, challengeDiffScreenEl, gameScreenEl;
+let btnModeClassic, btnModeChallenge, btnResumeSaved, resumeDesc;
+let btnBackClassic, btnBackChallenge, btnBackChallengeDiff, menuBtn;
+let challengeDiffTitle;
+let timerEl, pauseBtn, pauseOverlayEl, resumeBtn, btnRulesPause;
+let boardEl, svgOverlayEl, numpadEl, eraseBtn, undoBtn;
+let modeDigitBtn, modePencilBtn, modeColorBtn, colorPaletteEl;
+let btnHint, hintCountEl, hintModal, closeHintBtn, confirmHintBtn, hintMessageEl;
+let mistakesBox, mistakesCountEl, gameoverModal, btnGameoverMenu;
+let rulesModal, closeRulesBtn, dismissRulesBtn;
+let settingsBtnLanding, settingsBtnGame, settingsModal, closeSettingsBtn;
+let toggleDarkMode, toggleSound, toggleAutoErase, toggleDigitCounts, toggleHighlightErrors;
+let statsBtnLanding, statsModal, closeStatsBtn;
 
-// Navigation Buttons
-const btnModeClassic = document.getElementById('btn-mode-classic');
-const btnModeChallenge = document.getElementById('btn-mode-challenge');
-const btnResumeSaved = document.getElementById('btn-resume-saved');
-const resumeDesc = document.getElementById('resume-desc');
+function initDOMReferences() {
+  landingScreenEl = document.getElementById('landing-screen');
+  classicSelectScreenEl = document.getElementById('classic-select-screen');
+  challengeSelectScreenEl = document.getElementById('challenge-select-screen');
+  challengeDiffScreenEl = document.getElementById('challenge-diff-screen');
+  gameScreenEl = document.getElementById('game-screen');
 
-const btnBackClassic = document.getElementById('btn-back-classic');
-const btnBackChallenge = document.getElementById('btn-back-challenge');
-const btnBackChallengeDiff = document.getElementById('btn-back-challenge-diff');
-const menuBtn = document.getElementById('btn-menu');
+  btnModeClassic = document.getElementById('btn-mode-classic');
+  btnModeChallenge = document.getElementById('btn-mode-challenge');
+  btnResumeSaved = document.getElementById('btn-resume-saved');
+  resumeDesc = document.getElementById('resume-desc');
 
-const challengeDiffTitle = document.getElementById('challenge-diff-title');
+  btnBackClassic = document.getElementById('btn-back-classic');
+  btnBackChallenge = document.getElementById('btn-back-challenge');
+  btnBackChallengeDiff = document.getElementById('btn-back-challenge-diff');
+  menuBtn = document.getElementById('btn-menu');
 
-// Game Board Elements
-const timerEl = document.getElementById('timer');
-const pauseBtn = document.getElementById('btn-pause');
-const pauseOverlayEl = document.getElementById('pause-overlay');
-const resumeBtn = document.getElementById('btn-resume');
-const btnRulesPause = document.getElementById('btn-rules-pause');
+  challengeDiffTitle = document.getElementById('challenge-diff-title');
 
-const boardEl = document.getElementById('sudoku-board');
-const svgOverlayEl = document.getElementById('svg-overlay');
-const numpadEl = document.getElementById('numpad');
-const eraseBtn = document.getElementById('btn-erase');
-const undoBtn = document.getElementById('btn-undo');
+  timerEl = document.getElementById('timer');
+  pauseBtn = document.getElementById('btn-pause');
+  pauseOverlayEl = document.getElementById('pause-overlay');
+  resumeBtn = document.getElementById('btn-resume');
+  btnRulesPause = document.getElementById('btn-rules-pause');
 
-const modeDigitBtn = document.getElementById('btn-mode-digit');
-const modePencilBtn = document.getElementById('btn-mode-pencil');
-const modeColorBtn = document.getElementById('btn-mode-color');
-const colorPaletteEl = document.getElementById('color-palette');
+  boardEl = document.getElementById('sudoku-board');
+  svgOverlayEl = document.getElementById('svg-overlay');
+  numpadEl = document.getElementById('numpad');
+  eraseBtn = document.getElementById('btn-erase');
+  undoBtn = document.getElementById('btn-undo');
 
-// Hint & Mistakes Elements
-const btnHint = document.getElementById('btn-hint');
-const hintCountEl = document.getElementById('hint-count');
-const hintModal = document.getElementById('hint-modal');
-const closeHintBtn = document.getElementById('btn-close-hint');
-const confirmHintBtn = document.getElementById('btn-confirm-hint');
-const hintMessageEl = document.getElementById('hint-message');
+  modeDigitBtn = document.getElementById('btn-mode-digit');
+  modePencilBtn = document.getElementById('btn-mode-pencil');
+  modeColorBtn = document.getElementById('btn-mode-color');
+  colorPaletteEl = document.getElementById('color-palette');
 
-const mistakesBox = document.getElementById('mistakes-box');
-const mistakesCountEl = document.getElementById('mistakes-count');
-const gameoverModal = document.getElementById('gameover-modal');
-const btnGameoverMenu = document.getElementById('btn-gameover-menu');
+  btnHint = document.getElementById('btn-hint');
+  hintCountEl = document.getElementById('hint-count');
+  hintModal = document.getElementById('hint-modal');
+  closeHintBtn = document.getElementById('btn-close-hint');
+  confirmHintBtn = document.getElementById('btn-confirm-hint');
+  hintMessageEl = document.getElementById('hint-message');
 
-// Rules Modal Elements
-const rulesModal = document.getElementById('rules-modal');
-const closeRulesBtn = document.getElementById('btn-close-rules');
-const dismissRulesBtn = document.getElementById('btn-dismiss-rules');
+  mistakesBox = document.getElementById('mistakes-box');
+  mistakesCountEl = document.getElementById('mistakes-count');
+  gameoverModal = document.getElementById('gameover-modal');
+  btnGameoverMenu = document.getElementById('btn-gameover-menu');
 
-// Settings Elements
-const settingsBtnLanding = document.getElementById('btn-landing-settings');
-const settingsBtnGame = document.getElementById('btn-settings-game');
-const settingsModal = document.getElementById('settings-modal');
-const closeSettingsBtn = document.getElementById('btn-close-settings');
-const toggleDarkMode = document.getElementById('toggle-dark-mode');
-const toggleSound = document.getElementById('toggle-sound');
-const toggleAutoErase = document.getElementById('toggle-auto-erase');
-const toggleDigitCounts = document.getElementById('toggle-digit-counts');
-const toggleHighlightErrors = document.getElementById('toggle-highlight-errors');
+  rulesModal = document.getElementById('rules-modal');
+  closeRulesBtn = document.getElementById('btn-close-rules');
+  dismissRulesBtn = document.getElementById('btn-dismiss-rules');
 
-// Stats Modal Elements
-const statsBtnLanding = document.getElementById('btn-landing-stats');
-const statsModal = document.getElementById('stats-modal');
-const closeStatsBtn = document.getElementById('btn-close-stats');
+  settingsBtnLanding = document.getElementById('btn-landing-settings');
+  settingsBtnGame = document.getElementById('btn-settings-game');
+  settingsModal = document.getElementById('settings-modal');
+  closeSettingsBtn = document.getElementById('btn-close-settings');
+  toggleDarkMode = document.getElementById('toggle-dark-mode');
+  toggleSound = document.getElementById('toggle-sound');
+  toggleAutoErase = document.getElementById('toggle-auto-erase');
+  toggleDigitCounts = document.getElementById('toggle-digit-counts');
+  toggleHighlightErrors = document.getElementById('toggle-highlight-errors');
+
+  statsBtnLanding = document.getElementById('btn-landing-stats');
+  statsModal = document.getElementById('stats-modal');
+  closeStatsBtn = document.getElementById('btn-close-stats');
+}
 
 // --- PERSISTENT SAVE STATE ENGINE ---
 function saveGameToStorage() {
@@ -225,42 +235,205 @@ function initSettings() {
   } catch (e) {}
 }
 
-if (toggleDarkMode) {
-  toggleDarkMode.addEventListener('change', (e) => {
-    const isDark = e.target.checked;
-    document.body.classList.toggle('light-mode', !isDark);
-    localStorage.setItem('sudoku-theme', isDark ? 'dark' : 'light');
-  });
-}
+function attachEventListeners() {
+  if (toggleDarkMode) {
+    toggleDarkMode.addEventListener('change', (e) => {
+      const isDark = e.target.checked;
+      document.body.classList.toggle('light-mode', !isDark);
+      localStorage.setItem('sudoku-theme', isDark ? 'dark' : 'light');
+    });
+  }
 
-if (toggleSound) {
-  toggleSound.addEventListener('change', (e) => {
-    settingsSound = e.target.checked;
-    localStorage.setItem('sudoku-sound', settingsSound);
-  });
-}
+  if (toggleSound) {
+    toggleSound.addEventListener('change', (e) => {
+      settingsSound = e.target.checked;
+      localStorage.setItem('sudoku-sound', settingsSound);
+    });
+  }
 
-if (toggleAutoErase) {
-  toggleAutoErase.addEventListener('change', (e) => {
-    settingsAutoErase = e.target.checked;
-    localStorage.setItem('sudoku-auto-erase', settingsAutoErase);
-  });
-}
+  if (toggleAutoErase) {
+    toggleAutoErase.addEventListener('change', (e) => {
+      settingsAutoErase = e.target.checked;
+      localStorage.setItem('sudoku-auto-erase', settingsAutoErase);
+    });
+  }
 
-if (toggleDigitCounts) {
-  toggleDigitCounts.addEventListener('change', (e) => {
-    settingsShowCounts = e.target.checked;
-    localStorage.setItem('sudoku-show-counts', settingsShowCounts);
-    updateDigitCounts();
-  });
-}
+  if (toggleDigitCounts) {
+    toggleDigitCounts.addEventListener('change', (e) => {
+      settingsShowCounts = e.target.checked;
+      localStorage.setItem('sudoku-show-counts', settingsShowCounts);
+      updateDigitCounts();
+    });
+  }
 
-if (toggleHighlightErrors) {
-  toggleHighlightErrors.addEventListener('change', (e) => {
-    settingsHighlightErrors = e.target.checked;
-    localStorage.setItem('sudoku-highlight-errors', settingsHighlightErrors);
-    updateMistakesUI();
-    renderBoard();
+  if (toggleHighlightErrors) {
+    toggleHighlightErrors.addEventListener('change', (e) => {
+      settingsHighlightErrors = e.target.checked;
+      localStorage.setItem('sudoku-highlight-errors', settingsHighlightErrors);
+      updateMistakesUI();
+      renderBoard();
+    });
+  }
+
+  if (settingsBtnLanding) settingsBtnLanding.addEventListener('click', openSettings);
+  if (settingsBtnGame) settingsBtnGame.addEventListener('click', openSettings);
+  if (closeSettingsBtn) closeSettingsBtn.addEventListener('click', closeSettings);
+  if (settingsModal) {
+    settingsModal.addEventListener('click', (e) => {
+      if (e.target === settingsModal) closeSettings();
+    });
+  }
+
+  if (statsBtnLanding) statsBtnLanding.addEventListener('click', () => statsModal.classList.remove('hidden'));
+  if (closeStatsBtn) closeStatsBtn.addEventListener('click', () => statsModal.classList.add('hidden'));
+  if (statsModal) {
+    statsModal.addEventListener('click', (e) => {
+      if (e.target === statsModal) statsModal.classList.add('hidden');
+    });
+  }
+
+  if (closeRulesBtn) closeRulesBtn.addEventListener('click', closeRules);
+  if (dismissRulesBtn) dismissRulesBtn.addEventListener('click', closeRules);
+  if (btnRulesPause) btnRulesPause.addEventListener('click', openRules);
+
+  if (btnHint) btnHint.addEventListener('click', openHintModal);
+  if (closeHintBtn) closeHintBtn.addEventListener('click', closeHintModal);
+  if (confirmHintBtn) confirmHintBtn.addEventListener('click', triggerHint);
+  if (hintModal) {
+    hintModal.addEventListener('click', (e) => {
+      if (e.target === hintModal) closeHintModal();
+    });
+  }
+
+  if (btnGameoverMenu) {
+    btnGameoverMenu.addEventListener('click', () => {
+      clearSavedGame();
+      gameoverModal.classList.add('hidden');
+      showLandingScreen();
+    });
+  }
+
+  if (pauseBtn) pauseBtn.addEventListener('click', togglePause);
+  if (resumeBtn) resumeBtn.addEventListener('click', resumeGame);
+
+  if (btnModeClassic) {
+    btnModeClassic.addEventListener('click', () => {
+      if (loadGameFromStorage()) {
+        if (!confirm("Starting a new game will forfeit your current active game. Continue?")) return;
+      }
+      clearSavedGame();
+      activeStream = 'classic';
+      selectedVariant = 'classic';
+      hideAllScreens();
+      if (classicSelectScreenEl) classicSelectScreenEl.classList.remove('hidden');
+    });
+  }
+
+  if (btnModeChallenge) {
+    btnModeChallenge.addEventListener('click', () => {
+      if (loadGameFromStorage()) {
+        if (!confirm("Starting a new game will forfeit your current active game. Continue?")) return;
+      }
+      clearSavedGame();
+      activeStream = 'challenge';
+      hideAllScreens();
+      if (challengeSelectScreenEl) challengeSelectScreenEl.classList.remove('hidden');
+    });
+  }
+
+  if (btnResumeSaved) {
+    btnResumeSaved.addEventListener('click', () => {
+      const saved = loadGameFromStorage();
+      if (saved) {
+        resumeSavedGame(saved);
+      }
+    });
+  }
+
+  if (btnBackClassic) btnBackClassic.addEventListener('click', showLandingScreen);
+  if (btnBackChallenge) btnBackChallenge.addEventListener('click', showLandingScreen);
+  if (btnBackChallengeDiff) {
+    btnBackChallengeDiff.addEventListener('click', () => {
+      hideAllScreens();
+      if (challengeSelectScreenEl) challengeSelectScreenEl.classList.remove('hidden');
+    });
+  }
+  if (menuBtn) menuBtn.addEventListener('click', showLandingScreen);
+
+  document.querySelectorAll('.diff-option-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      selectedClues = parseInt(btn.dataset.difficulty, 10);
+      startNewGame();
+    });
+  });
+
+  document.querySelectorAll('.variant-option-card:not(.disabled)').forEach(card => {
+    card.addEventListener('click', () => {
+      selectedVariant = card.dataset.variant;
+      const variantNames = { thermometer: 'Thermometer', knight: 'Knight Move', irregular: 'Irregular Jigsaw' };
+      if (challengeDiffTitle) challengeDiffTitle.textContent = variantNames[selectedVariant] || 'Challenge';
+      hideAllScreens();
+      if (challengeDiffScreenEl) challengeDiffScreenEl.classList.remove('hidden');
+    });
+  });
+
+  document.querySelectorAll('.challenge-diff-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      selectedClues = parseInt(btn.dataset.difficulty, 10);
+      startNewGame();
+    });
+  });
+
+  if (modeDigitBtn) modeDigitBtn.addEventListener('click', () => setMode('digit'));
+  if (modePencilBtn) modePencilBtn.addEventListener('click', () => setMode('pencil'));
+  if (modeColorBtn) modeColorBtn.addEventListener('click', () => setMode('color'));
+
+  if (colorPaletteEl) {
+    colorPaletteEl.addEventListener('click', (e) => {
+      const swatch = e.target.closest('.color-swatch');
+      if (!swatch) return;
+      document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+      swatch.classList.add('active');
+      activeColor = swatch.dataset.color;
+    });
+  }
+
+  if (numpadEl) {
+    numpadEl.addEventListener('click', (e) => {
+      const btn = e.target.closest('.num-btn');
+      if (!btn) return;
+      enterDigit(parseInt(btn.dataset.value, 10));
+    });
+  }
+
+  if (eraseBtn) eraseBtn.addEventListener('click', () => enterDigit(0));
+  if (undoBtn) undoBtn.addEventListener('click', undo);
+
+  document.addEventListener('click', (e) => {
+    const isCell = e.target.closest('.cell');
+    const isButton = e.target.closest('button, select, .color-swatch, .modal-card');
+    if (!isCell && !isButton && selectedIdx !== null) {
+      selectedIdx = null;
+      renderBoard();
+    }
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (settingsModal && !settingsModal.classList.contains('hidden')) closeSettings();
+      else if (statsModal && !statsModal.classList.contains('hidden')) statsModal.classList.add('hidden');
+      else if (rulesModal && !rulesModal.classList.contains('hidden')) closeRules();
+      else if (hintModal && !hintModal.classList.contains('hidden')) closeHintModal();
+      else if (isPaused) resumeGame();
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+      e.preventDefault();
+      undo();
+      return;
+    }
+    if (e.key >= '1' && e.key <= '9') enterDigit(parseInt(e.key, 10));
+    if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') enterDigit(0);
   });
 }
 
@@ -289,32 +462,9 @@ function closeSettings() {
   }
 }
 
-if (settingsBtnLanding) settingsBtnLanding.addEventListener('click', openSettings);
-if (settingsBtnGame) settingsBtnGame.addEventListener('click', openSettings);
-if (closeSettingsBtn) closeSettingsBtn.addEventListener('click', closeSettings);
-if (settingsModal) {
-  settingsModal.addEventListener('click', (e) => {
-    if (e.target === settingsModal) closeSettings();
-  });
-}
-
-// Stats Modal Handlers
-if (statsBtnLanding) statsBtnLanding.addEventListener('click', () => statsModal.classList.remove('hidden'));
-if (closeStatsBtn) closeStatsBtn.addEventListener('click', () => statsModal.classList.add('hidden'));
-if (statsModal) {
-  statsModal.addEventListener('click', (e) => {
-    if (e.target === statsModal) statsModal.classList.add('hidden');
-  });
-}
-
-// Rules Modal Handlers
 function openRules() { rulesModal.classList.remove('hidden'); }
 function closeRules() { rulesModal.classList.add('hidden'); }
-if (closeRulesBtn) closeRulesBtn.addEventListener('click', closeRules);
-if (dismissRulesBtn) dismissRulesBtn.addEventListener('click', closeRules);
-if (btnRulesPause) btnRulesPause.addEventListener('click', openRules);
 
-// --- SMART LOGICAL HINT ENGINE ---
 function openHintModal() {
   if (hintsRemaining <= 0) {
     hintMessageEl.textContent = "You have no hints remaining for this game!";
@@ -374,25 +524,6 @@ function triggerHint() {
   }
 }
 
-if (btnHint) btnHint.addEventListener('click', openHintModal);
-if (closeHintBtn) closeHintBtn.addEventListener('click', closeHintModal);
-if (confirmHintBtn) confirmHintBtn.addEventListener('click', triggerHint);
-if (hintModal) {
-  hintModal.addEventListener('click', (e) => {
-    if (e.target === hintModal) closeHintModal();
-  });
-}
-
-// Game Over Handlers
-if (btnGameoverMenu) {
-  btnGameoverMenu.addEventListener('click', () => {
-    clearSavedGame();
-    gameoverModal.classList.add('hidden');
-    showLandingScreen();
-  });
-}
-
-// --- TIMER ENGINE ---
 function startTimer() {
   clearInterval(timerInterval);
   isPaused = false;
@@ -436,10 +567,6 @@ function togglePause() {
   if (isPaused) resumeGame(); else pauseGame();
 }
 
-if (pauseBtn) pauseBtn.addEventListener('click', togglePause);
-if (resumeBtn) resumeBtn.addEventListener('click', resumeGame);
-
-// --- NAVIGATION FLOW ---
 function hideAllScreens() {
   if (landingScreenEl) landingScreenEl.classList.add('hidden');
   if (classicSelectScreenEl) classicSelectScreenEl.classList.add('hidden');
@@ -455,74 +582,6 @@ function showLandingScreen() {
   checkActiveSaveStateOnLanding();
   if (landingScreenEl) landingScreenEl.classList.remove('hidden');
 }
-
-if (btnModeClassic) {
-  btnModeClassic.addEventListener('click', () => {
-    if (loadGameFromStorage()) {
-      if (!confirm("Starting a new game will forfeit your current active game. Continue?")) return;
-    }
-    clearSavedGame();
-    activeStream = 'classic';
-    selectedVariant = 'classic';
-    hideAllScreens();
-    if (classicSelectScreenEl) classicSelectScreenEl.classList.remove('hidden');
-  });
-}
-
-if (btnModeChallenge) {
-  btnModeChallenge.addEventListener('click', () => {
-    if (loadGameFromStorage()) {
-      if (!confirm("Starting a new game will forfeit your current active game. Continue?")) return;
-    }
-    clearSavedGame();
-    activeStream = 'challenge';
-    hideAllScreens();
-    if (challengeSelectScreenEl) challengeSelectScreenEl.classList.remove('hidden');
-  });
-}
-
-if (btnResumeSaved) {
-  btnResumeSaved.addEventListener('click', () => {
-    const saved = loadGameFromStorage();
-    if (saved) {
-      resumeSavedGame(saved);
-    }
-  });
-}
-
-if (btnBackClassic) btnBackClassic.addEventListener('click', showLandingScreen);
-if (btnBackChallenge) btnBackChallenge.addEventListener('click', showLandingScreen);
-if (btnBackChallengeDiff) {
-  btnBackChallengeDiff.addEventListener('click', () => {
-    hideAllScreens();
-    if (challengeSelectScreenEl) challengeSelectScreenEl.classList.remove('hidden');
-  });
-}
-if (menuBtn) menuBtn.addEventListener('click', showLandingScreen);
-
-document.querySelectorAll('.diff-option-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    selectedClues = parseInt(btn.dataset.difficulty, 10);
-    startNewGame();
-  });
-});
-
-document.querySelectorAll('.variant-option-card:not(.disabled)').forEach(card => {
-  card.addEventListener('click', () => {
-    selectedVariant = card.dataset.variant;
-    const variantNames = { thermometer: 'Thermometer', knight: 'Knight Move', irregular: 'Irregular Jigsaw' };
-    if (challengeDiffTitle) challengeDiffTitle.textContent = variantNames[selectedVariant] || 'Challenge';
-    hideAllScreens();
-    if (challengeDiffScreenEl) challengeDiffScreenEl.classList.remove('hidden');
-  });
-});
-
-document.querySelectorAll('.challenge-diff-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    selectedClues = parseInt(btn.dataset.difficulty, 10);
-    startNewGame();
-  });
-});
 
 function startNewGame() {
   clearSavedGame();
@@ -572,7 +631,6 @@ function resumeSavedGame(saved) {
   startTimer();
 }
 
-// --- THERMOMETER GENERATOR ENGINE ---
 function generateThermometersForSolution() {
   thermometers = [];
   const occupiedCells = new Set();
@@ -645,7 +703,6 @@ function generateThermometersForSolution() {
   }
 }
 
-// --- RENDER THERMOMETER SVG ---
 function renderThermometersSVG() {
   if (!svgOverlayEl) return;
   svgOverlayEl.innerHTML = '';
@@ -690,7 +747,6 @@ function renderThermometersSVG() {
   });
 }
 
-// --- PERMUTATION & CLUE GENERATOR ---
 function generateNewPuzzle() {
   const cluesCount = selectedClues;
   
@@ -735,7 +791,6 @@ function generateNewPuzzle() {
   renderThermometersSVG();
 }
 
-// --- CONFLICT VALIDATION ENGINE ---
 function hasConflict(r, c) {
   const val = boardState[r][c];
   if (val === 0) return false;
@@ -777,7 +832,6 @@ function hasConflict(r, c) {
   return false;
 }
 
-// --- COMPLETION CHECK ---
 function checkAndTriggerCompletions(r, c) {
   if (!boardEl) return;
   let rowSet = new Set(), rowValid = true;
@@ -1041,58 +1095,11 @@ function setMode(mode) {
   if (colorPaletteEl) colorPaletteEl.classList.toggle('hidden', mode !== 'color');
 }
 
-document.addEventListener('click', (e) => {
-  const isCell = e.target.closest('.cell');
-  const isButton = e.target.closest('button, select, .color-swatch, .modal-card');
-  if (!isCell && !isButton && selectedIdx !== null) {
-    selectedIdx = null;
-    renderBoard();
-  }
+// --- DOMContentLoaded Initialization Guard ---
+document.addEventListener('DOMContentLoaded', () => {
+  initDOMReferences();
+  initSettings();
+  attachEventListeners();
+  checkActiveSaveStateOnLanding();
+  showLandingScreen();
 });
-
-if (modeDigitBtn) modeDigitBtn.addEventListener('click', () => setMode('digit'));
-if (modePencilBtn) modePencilBtn.addEventListener('click', () => setMode('pencil'));
-if (modeColorBtn) modeColorBtn.addEventListener('click', () => setMode('color'));
-
-if (colorPaletteEl) {
-  colorPaletteEl.addEventListener('click', (e) => {
-    const swatch = e.target.closest('.color-swatch');
-    if (!swatch) return;
-    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
-    swatch.classList.add('active');
-    activeColor = swatch.dataset.color;
-  });
-}
-
-if (numpadEl) {
-  numpadEl.addEventListener('click', (e) => {
-    const btn = e.target.closest('.num-btn');
-    if (!btn) return;
-    enterDigit(parseInt(btn.dataset.value, 10));
-  });
-}
-
-if (eraseBtn) eraseBtn.addEventListener('click', () => enterDigit(0));
-if (undoBtn) undoBtn.addEventListener('click', undo);
-
-window.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') {
-    if (settingsModal && !settingsModal.classList.contains('hidden')) closeSettings();
-    else if (statsModal && !statsModal.classList.contains('hidden')) statsModal.classList.add('hidden');
-    else if (rulesModal && !rulesModal.classList.contains('hidden')) closeRules();
-    else if (hintModal && !hintModal.classList.contains('hidden')) closeHintModal();
-    else if (isPaused) resumeGame();
-    return;
-  }
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
-    e.preventDefault();
-    undo();
-    return;
-  }
-  if (e.key >= '1' && e.key <= '9') enterDigit(parseInt(e.key, 10));
-  if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') enterDigit(0);
-});
-
-initSettings();
-checkActiveSaveStateOnLanding();
-showLandingScreen();
