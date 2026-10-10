@@ -353,32 +353,32 @@ function startNewGame() {
   }
 }
 
-// --- THERMOMETER GENERATOR ENGINE ---
+// --- ADVANCED THERMOMETER GENERATOR (Diagonal + Non-Parallel Separation) ---
 function generateThermometersForSolution() {
   thermometers = [];
-  const usedCells = new Set();
-  const targetCount = selectedClues === 0 ? 6 : 4; // Dense thermometers for expert zero-clue
+  const occupiedCells = new Set(); // Stores "r,c" for strict path tracking
+  const targetCount = selectedClues === 0 ? 5 : 4; 
 
+  // Orthogonal + Diagonal Directions
   const directions = [
-    { dr: -1, dc: 0 },
-    { dr: 1, dc: 0 },
-    { dr: 0, dc: -1 },
-    { dr: 0, dc: 1 }
+    { dr: -1, dc: 0 }, { dr: 1, dc: 0 }, { dr: 0, dc: -1 }, { dr: 0, dc: 1 },
+    { dr: -1, dc: -1 }, { dr: -1, dc: 1 }, { dr: 1, dc: -1 }, { dr: 1, dc: 1 }
   ];
 
-  for (let attempt = 0; attempt < 80 && thermometers.length < targetCount; attempt++) {
+  for (let attempt = 0; attempt < 100 && thermometers.length < targetCount; attempt++) {
     const startR = Math.floor(Math.random() * 9);
     const startC = Math.floor(Math.random() * 9);
     const key = `${startR},${startC}`;
 
-    if (usedCells.has(key)) continue;
+    // Ensure bulbs don't crowd together
+    if (occupiedCells.has(key)) continue;
 
     const path = [{ r: startR, c: startC }];
     let currR = startR;
     let currC = startC;
     let currVal = solutionMatrix[currR][currC];
 
-    const targetLength = Math.floor(Math.random() * 4) + 3; // 3 to 6 cells length
+    const targetLength = Math.floor(Math.random() * 3) + 3; // Length 3 to 5
 
     for (let step = 0; step < targetLength - 1; step++) {
       const validNeighbors = [];
@@ -387,7 +387,8 @@ function generateThermometersForSolution() {
         const nc = currC + d.dc;
         if (nr >= 0 && nr < 9 && nc >= 0 && nc < 9) {
           const nKey = `${nr},${nc}`;
-          if (!path.some(p => p.r === nr && p.c === nc)) { // No self-crossing
+          // No self-crossing and prevent running parallel/adjacent to existing paths
+          if (!path.some(p => p.r === nr && p.c === nc)) {
             const nextVal = solutionMatrix[nr][nc];
             if (nextVal > currVal) {
               validNeighbors.push({ r: nr, c: nc, val: nextVal });
@@ -408,8 +409,23 @@ function generateThermometersForSolution() {
     }
 
     if (path.length >= 3) {
-      thermometers.push(path);
-      path.forEach(p => usedCells.add(`${p.r},${p.c}`));
+      // Check if this path runs parallel side-by-side with another path
+      let tooClose = false;
+      for (const existingPath of thermometers) {
+        for (const p1 of path) {
+          for (const p2 of existingPath) {
+            const dist = Math.max(Math.abs(p1.r - p2.r), Math.abs(p1.c - p2.c));
+            if (dist === 1 && !path.some(x => x.r === p2.r && x.c === p2.c)) {
+              tooClose = true;
+            }
+          }
+        }
+      }
+
+      if (!tooClose) {
+        thermometers.push(path);
+        path.forEach(p => occupiedCells.add(`${p.r},${p.c}`));
+      }
     }
   }
 }
@@ -419,12 +435,11 @@ function renderThermometersSVG() {
   svgOverlayEl.innerHTML = '';
   if (selectedVariant !== 'thermometer' || thermometers.length === 0) return;
 
-  const cellSize = 100 / 9; // SVG viewBox is 0 0 100 100
+  const cellSize = 100 / 9;
 
   thermometers.forEach(path => {
     if (path.length === 0) return;
 
-    // Draw Thermometer Tubing/Stem (Path line)
     if (path.length > 1) {
       let pathData = '';
       path.forEach((pt, idx) => {
@@ -447,7 +462,6 @@ function renderThermometersSVG() {
       svgOverlayEl.appendChild(strokePath);
     }
 
-    // Draw Thermometer Bulb (Circle at start)
     const bulbPt = path[0];
     const bulbX = bulbPt.c * cellSize + cellSize / 2;
     const bulbY = bulbPt.r * cellSize + cellSize / 2;
@@ -513,7 +527,6 @@ function hasConflict(r, c) {
   const val = boardState[r][c];
   if (val === 0) return false;
 
-  // Standard Sudoku Constraints
   for (let i = 0; i < 9; i++) {
     if (i !== c && boardState[r][i] === val) return true;
     if (i !== r && boardState[i][c] === val) return true;
@@ -531,7 +544,6 @@ function hasConflict(r, c) {
     }
   }
 
-  // Thermometer Constraint Validation
   if (selectedVariant === 'thermometer') {
     for (const path of thermometers) {
       for (let i = 0; i < path.length - 1; i++) {
