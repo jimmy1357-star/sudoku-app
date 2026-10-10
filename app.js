@@ -23,6 +23,7 @@ let currentMode = 'digit'; // 'digit', 'pencil', 'color'
 let activeColor = 'c-blue';
 
 // Settings State
+let settingsSound = true;
 let settingsAutoErase = true;
 let settingsShowCounts = true;
 let settingsHighlightErrors = false;
@@ -56,9 +57,48 @@ const settingsBtn = document.getElementById('btn-settings');
 const settingsModal = document.getElementById('settings-modal');
 const closeSettingsBtn = document.getElementById('btn-close-settings');
 const toggleDarkMode = document.getElementById('toggle-dark-mode');
+const toggleSound = document.getElementById('toggle-sound');
 const toggleAutoErase = document.getElementById('toggle-auto-erase');
 const toggleDigitCounts = document.getElementById('toggle-digit-counts');
 const toggleHighlightErrors = document.getElementById('toggle-highlight-errors');
+
+// --- WEB AUDIO SYNTHESIZER ---
+let audioCtx = null;
+
+function playCompletionChime() {
+  if (!settingsSound) return;
+  try {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+
+    const now = audioCtx.currentTime;
+    
+    // Play a gentle two-note arpeggio chime (E5 -> B5)
+    [523.25, 659.25, 783.99].forEach((freq, index) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + index * 0.08);
+
+      gain.gain.setValueAtTime(0, now + index * 0.08);
+      gain.gain.linearRampToValueAtTime(0.12, now + index * 0.08 + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + index * 0.08 + 0.7);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start(now + index * 0.08);
+      osc.stop(now + index * 0.08 + 0.75);
+    });
+  } catch (e) {
+    // Audio context not allowed or supported
+  }
+}
 
 // --- SETTINGS ENGINE ---
 function initSettings() {
@@ -66,6 +106,9 @@ function initSettings() {
   const isDark = savedTheme !== 'light';
   document.body.classList.toggle('light-mode', !isDark);
   toggleDarkMode.checked = isDark;
+
+  settingsSound = localStorage.getItem('sudoku-sound') !== 'false';
+  toggleSound.checked = settingsSound;
 
   settingsAutoErase = localStorage.getItem('sudoku-auto-erase') !== 'false';
   toggleAutoErase.checked = settingsAutoErase;
@@ -81,6 +124,11 @@ toggleDarkMode.addEventListener('change', (e) => {
   const isDark = e.target.checked;
   document.body.classList.toggle('light-mode', !isDark);
   localStorage.setItem('sudoku-theme', isDark ? 'dark' : 'light');
+});
+
+toggleSound.addEventListener('change', (e) => {
+  settingsSound = e.target.checked;
+  localStorage.setItem('sudoku-sound', settingsSound);
 });
 
 toggleAutoErase.addEventListener('change', (e) => {
@@ -238,7 +286,6 @@ function hasConflict(r, c) {
 
 // --- COMPLETION PULSE CHECK ENGINE ---
 function checkAndTriggerCompletions(r, c) {
-  // Check Row
   let rowSet = new Set();
   let rowValid = true;
   for (let i = 0; i < 9; i++) {
@@ -250,7 +297,6 @@ function checkAndTriggerCompletions(r, c) {
     rowSet.add(v);
   }
 
-  // Check Column
   let colSet = new Set();
   let colValid = true;
   for (let i = 0; i < 9; i++) {
@@ -262,7 +308,6 @@ function checkAndTriggerCompletions(r, c) {
     colSet.add(v);
   }
 
-  // Check 3x3 Box
   let boxSet = new Set();
   let boxValid = true;
   const boxStartRow = Math.floor(r / 3) * 3;
@@ -281,8 +326,10 @@ function checkAndTriggerCompletions(r, c) {
     }
   }
 
-  // Trigger 1000ms outward expanding pulses
+  let triggered = false;
+
   if (rowValid) {
+    triggered = true;
     for (let col = 0; col < 9; col++) {
       const cell = boardEl.children[r * 9 + col];
       if (cell) {
@@ -294,6 +341,7 @@ function checkAndTriggerCompletions(r, c) {
   }
 
   if (colValid) {
+    triggered = true;
     for (let row = 0; row < 9; row++) {
       const cell = boardEl.children[row * 9 + c];
       if (cell) {
@@ -305,6 +353,7 @@ function checkAndTriggerCompletions(r, c) {
   }
 
   if (boxValid) {
+    triggered = true;
     for (let br = 0; br < 3; br++) {
       for (let bc = 0; bc < 3; bc++) {
         const row = boxStartRow + br;
@@ -318,6 +367,10 @@ function checkAndTriggerCompletions(r, c) {
         }
       }
     }
+  }
+
+  if (triggered) {
+    playCompletionChime();
   }
 }
 
@@ -512,7 +565,6 @@ function enterDigit(digit) {
 
   renderBoard();
 
-  // Trigger completion outward pulse if row/column/box is filled
   if (digit !== 0 && currentMode === 'digit') {
     checkAndTriggerCompletions(r, c);
   }
