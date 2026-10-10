@@ -53,6 +53,13 @@ body.light-mode .color-swatch.c-pink {
   background: #f472b6;
 }
 
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  position: fixed;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -65,11 +72,10 @@ body {
   background-color: var(--bg-color);
   color: var(--text-main);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 12px;
+  padding: 8px;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
@@ -78,25 +84,28 @@ body {
   max-width: 420px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
+  margin: 0 auto;
 }
 
+/* Header Responsiveness Fixes */
 .app-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   width: 100%;
 }
 
 .timer-box {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
+  flex-shrink: 0;
 }
 
 .timer-display {
-  font-size: 1.25rem;
+  font-size: clamp(1rem, 4vw, 1.25rem);
   font-weight: 700;
   color: var(--accent);
   font-variant-numeric: tabular-nums;
@@ -105,35 +114,42 @@ body {
 
 .header-controls {
   display: flex;
-  gap: 4px;
+  gap: 3px;
   align-items: center;
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 .select-input {
   background: var(--card-bg);
   color: var(--text-main);
   border: 1px solid var(--border-subtle);
-  padding: 5px 6px;
-  border-radius: 8px;
+  padding: 4px 4px;
+  border-radius: 6px;
   font-weight: 600;
-  font-size: 0.78rem;
+  font-size: clamp(0.7rem, 2.8vw, 0.8rem);
+  max-width: 82px;
+  text-overflow: ellipsis;
 }
 
 .btn {
   background: var(--card-bg);
   color: var(--text-main);
   border: 1px solid var(--border-subtle);
-  padding: 5px 8px;
-  border-radius: 8px;
+  padding: 4px 6px;
+  border-radius: 6px;
   font-weight: 600;
-  font-size: 0.78rem;
+  font-size: clamp(0.7rem, 2.8vw, 0.8rem);
   cursor: pointer;
   white-space: nowrap;
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 .btn-icon {
-  font-size: 0.85rem;
-  padding: 5px 7px;
+  font-size: clamp(0.75rem, 3vw, 0.85rem);
+  padding: 4px 5px;
+  flex-shrink: 0;
 }
 
 .btn-primary {
@@ -150,14 +166,15 @@ body.light-mode .btn-primary {
 .game-area {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
+  width: 100%;
 }
 
 .sudoku-container {
   position: relative;
   width: 100%;
   aspect-ratio: 1;
-  border: 3px solid var(--border-strong);
+  border: 2px solid var(--border-strong);
   border-radius: 6px;
   overflow: hidden;
   background: var(--border-strong);
@@ -221,7 +238,7 @@ body.light-mode .pause-overlay {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.4rem;
+  font-size: clamp(1.1rem, 5vw, 1.4rem);
   font-weight: 700;
   cursor: pointer;
   position: relative;
@@ -304,11 +321,11 @@ body.light-mode .pause-overlay {
   grid-template-rows: repeat(3, 1fr);
   width: 100%;
   height: 100%;
-  padding: 2px;
+  padding: 1px;
 }
 
 .pencil-digit {
-  font-size: 0.5rem;
+  font-size: clamp(0.45rem, 2vw, 0.55rem);
   font-weight: 600;
   color: var(--text-muted);
   display: flex;
@@ -319,9 +336,9 @@ body.light-mode .pause-overlay {
 /* Mode Bar & Palette */
 .mode-bar {
   display: flex;
-  gap: 6px;
+  gap: 4px;
   background: var(--card-bg);
-  padding: 4px;
+  padding: 3px;
   border-radius: 8px;
   border: 1px solid var(--border-subtle);
 }
@@ -331,8 +348,9 @@ body.light-mode .pause-overlay {
   background: transparent;
   color: var(--text-muted);
   border: none;
-  padding: 8px 0;
+  padding: 6px 0;
   font-weight: 600;
+  font-size: clamp(0.75rem, 3vw, 0.85rem);
   border-radius: 6px;
   cursor: pointer;
 }
@@ -350,7 +368,7 @@ body.light-mode .mode-btn.active {
   display: flex;
   justify-content: space-around;
   background: var(--card-bg);
-  padding: 6px;
+  padding: 5px;
   border-radius: 8px;
   border: 1px solid var(--border-subtle);
 }
@@ -358,8 +376,8 @@ body.light-mode .mode-btn.active {
 .color-palette.hidden { display: none; }
 
 .color-swatch {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   border: 2px solid transparent;
   cursor: pointer;
@@ -379,7 +397,7 @@ body.light-mode .mode-btn.active {
 .numpad {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 6px;
+  gap: 5px;
 }
 
 .num-btn {
@@ -388,9 +406,9 @@ body.light-mode .mode-btn.active {
   color: var(--text-main);
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
-  font-size: 1.2rem;
+  font-size: clamp(1rem, 4.5vw, 1.25rem);
   font-weight: 700;
-  padding: 10px 0;
+  padding: 8px 0;
   cursor: pointer;
   text-align: center;
   transition: opacity 0.2s ease, transform 0.1s ease;
@@ -404,7 +422,7 @@ body.light-mode .mode-btn.active {
   position: absolute;
   top: 2px;
   right: 4px;
-  font-size: 0.6rem;
+  font-size: 0.55rem;
   font-weight: 700;
   color: var(--accent);
   pointer-events: none;
