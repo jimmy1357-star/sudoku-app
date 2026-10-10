@@ -726,7 +726,7 @@ function generateThermometersForSolution() {
   }
 }
 
-// --- SINGLE-PATH THIN SEAMLESS THERMOMETER RENDERER ---
+// --- THIN THERMOMETER RENDERER WITH DISTINCT BULB ---
 function renderThermometersSVG() {
   if (!svgOverlayEl) return;
   svgOverlayEl.innerHTML = '';
@@ -737,25 +737,35 @@ function renderThermometersSVG() {
   thermometers.forEach(path => {
     if (path.length === 0) return;
 
+    let pathData = '';
+    path.forEach((pt, idx) => {
+      const x = pt.c * cellSize + cellSize / 2;
+      const y = pt.r * cellSize + cellSize / 2;
+      if (idx === 0) pathData += `M ${x} ${y}`;
+      else pathData += ` L ${x} ${y}`;
+    });
+
+    // Thin stem path
+    const stemPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    stemPath.setAttribute('d', pathData);
+    stemPath.setAttribute('stroke', 'var(--thermo-stem)');
+    stemPath.setAttribute('stroke-width', '2.4');
+    stemPath.setAttribute('fill', 'none');
+    stemPath.setAttribute('stroke-linecap', 'round');
+    stemPath.setAttribute('stroke-linejoin', 'round');
+    svgOverlayEl.appendChild(stemPath);
+
+    // Distinct bulb circle at the start of the thermometer
     const bulbPt = path[0];
     const bulbX = bulbPt.c * cellSize + cellSize / 2;
     const bulbY = bulbPt.r * cellSize + cellSize / 2;
 
-    let pathData = `M ${bulbX} ${bulbY}`;
-    path.forEach((pt) => {
-      const x = pt.c * cellSize + cellSize / 2;
-      const y = pt.r * cellSize + cellSize / 2;
-      pathData += ` L ${x} ${y}`;
-    });
-
-    const thermoPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    thermoPath.setAttribute('d', pathData);
-    thermoPath.setAttribute('stroke', 'var(--thermo-stem)');
-    thermoPath.setAttribute('stroke-width', '2.4');
-    thermoPath.setAttribute('fill', 'none');
-    thermoPath.setAttribute('stroke-linecap', 'round');
-    thermoPath.setAttribute('stroke-linejoin', 'round');
-    svgOverlayEl.appendChild(thermoPath);
+    const bulbCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    bulbCircle.setAttribute('cx', bulbX);
+    bulbCircle.setAttribute('cy', bulbY);
+    bulbCircle.setAttribute('r', '4.2');
+    bulbCircle.setAttribute('fill', 'var(--thermo-stem)');
+    svgOverlayEl.appendChild(bulbCircle);
   });
 }
 
