@@ -1,8 +1,8 @@
-const CACHE_NAME = 'sudoku-v34';
+const CACHE_NAME = 'sudoku-v35';
 const ASSETS = [
   './',
   './index.html',
-  './style.css?v=24',
+  './style.css?v=25',
   './app.js',
   './manifest.json'
 ];
@@ -35,7 +35,7 @@ self.addEventListener('activate', (e) => {
 
 // Fetch Event - Network-first fallback for stylesheets/scripts
 self.addEventListener('fetch', (e) => {
-  if (e.request.url.includes('style.css') || e.request.url.includes('app.js')) {
+  if (e.request.url.includes('style.css') || e.request.url.includes('app.js') || e.request.url.includes('index.html')) {
     e.respondWith(
       fetch(e.request)
         .then((response) => {
