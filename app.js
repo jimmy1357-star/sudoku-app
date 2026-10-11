@@ -55,7 +55,7 @@ let boardEl, svgOverlayEl, numpadEl, eraseBtn, undoBtn;
 let modeDigitBtn, modePencilBtn, modeColorBtn, colorPaletteEl;
 let btnHint, hintCountEl, hintModal, closeHintBtn, confirmHintBtn, hintMessageEl;
 let mistakesBox, mistakesCountEl, gameoverModal, btnGameoverMenu;
-let rulesModal, closeRulesBtn, dismissRulesBtn;
+let rulesModal, closeRulesBtn, dismissRulesBtn, rulesTitleEl, rulesBodyContentEl;
 let settingsBtnLanding, settingsBtnGame, settingsModal, closeSettingsBtn;
 let toggleDarkMode, toggleSound, toggleAutoErase, toggleDigitCounts, toggleHighlightErrors;
 let statsBtnLanding, statsModal, closeStatsBtn;
@@ -111,6 +111,8 @@ function initDOMReferences() {
   rulesModal = document.getElementById('rules-modal');
   closeRulesBtn = document.getElementById('btn-close-rules');
   dismissRulesBtn = document.getElementById('btn-dismiss-rules');
+  rulesTitleEl = document.getElementById('rules-title');
+  rulesBodyContentEl = document.getElementById('rules-body-content');
 
   settingsBtnLanding = document.getElementById('btn-landing-settings');
   settingsBtnGame = document.getElementById('btn-settings-game');
@@ -482,6 +484,50 @@ function closeSettings() {
 function openRules() { rulesModal.classList.remove('hidden'); }
 function closeRules() { rulesModal.classList.add('hidden'); }
 
+// --- DYNAMIC VARIANT RULES MODAL CONFIGURATION ---
+function setupVariantRulesModal() {
+  if (!btnRulesPause || !rulesTitleEl || !rulesBodyContentEl) return;
+
+  // Check if variant has special rules (Classic has none, Challenge modes do)
+  // Designed to easily support arrays or multiple variants in future "Expert Random" modes
+  const hasVariants = selectedVariant !== 'classic';
+
+  if (!hasVariants) {
+    btnRulesPause.classList.add('hidden');
+    return;
+  }
+
+  btnRulesPause.classList.remove('hidden');
+
+  if (selectedVariant === 'thermometer') {
+    rulesTitleEl.textContent = "Thermometer Rules";
+    rulesBodyContentEl.innerHTML = `
+      <p><strong>Thermometer Constraint:</strong></p>
+      <p>Numbers along a thermometer must <strong>strictly increase</strong> moving from the circular bulb end toward the flat tip.</p>
+      <p><em>Example:</em> A 3-cell thermometer starting at a bulb could contain <strong>1 ➔ 4 ➔ 8</strong>, but not <strong>2 ➔ 2 ➔ 5</strong> or <strong>6 ➔ 3 ➔ 9</strong>.</p>
+    `;
+  } else if (selectedVariant === 'knight') {
+    rulesTitleEl.textContent = "Knight Move Rules";
+    rulesBodyContentEl.innerHTML = `
+      <p><strong>Knight Move Constraint:</strong></p>
+      <p>Identical digits cannot be placed in cells that are a chess knight's move apart (L-shape: 2 squares in one direction and 1 square perpendicular).</p>
+    `;
+  } else if (selectedVariant === 'irregular') {
+    rulesTitleEl.textContent = "Irregular Jigsaw Rules";
+    rulesBodyContentEl.innerHTML = `
+      <p><strong>Irregular Jigsaw Constraint:</strong></p>
+      <p>The standard 3x3 boxes are replaced by non-standard 9-cell jigsaw regions. Each region must contain the digits 1 through 9 exactly once.</p>
+    `;
+  } else {
+    // Future fallback for combined/Expert Random multi-variant games
+    rulesTitleEl.textContent = "Challenge Variant Rules";
+    rulesBodyContentEl.innerHTML = `
+      <p><strong>Active Variant Rules:</strong></p>
+      <p>This puzzle combines advanced challenge rules. Observe all active constraints carefully.</p>
+    `;
+  }
+}
+
 // --- SMART LOGICAL HINT ENGINE (MINI SUDOKU AI) ---
 function getCellCandidates(r, c) {
   const candidates = [];
@@ -678,7 +724,6 @@ function openHintModal() {
     hintMessageEl.innerHTML = "You have no hints remaining for this game!";
     confirmHintBtn.style.display = 'none';
   } else {
-    // Step 1: Just show confirmation prompt. Do NOT calculate or deduct yet!
     hintMessageEl.innerHTML = `Would you like a hint? You have [${hintsRemaining}] remaining.`;
     confirmHintBtn.style.display = 'block';
     confirmHintBtn.textContent = "Get Direction";
@@ -693,7 +738,6 @@ function closeHintModal() {
 function triggerHint() {
   if (hintsRemaining <= 0) return;
 
-  // Step 2: User confirmed. Now deduct hint, calculate smart hint, and display message.
   hintsRemaining--;
   if (hintCountEl) hintCountEl.textContent = hintsRemaining;
   
@@ -704,7 +748,7 @@ function triggerHint() {
     hintMessageEl.innerHTML = `No immediate logical deduction found, but keep scanning!<br><br><span style="color: var(--text-muted); font-size: 0.85rem;">[${hintsRemaining} hints remaining]</span>`;
   }
 
-  confirmHintBtn.style.display = 'none'; // Hide button after revealing so closing just dismisses
+  confirmHintBtn.style.display = 'none';
   saveGameToStorage();
 
   if (currentHintResult) {
@@ -783,6 +827,7 @@ function startNewGame() {
   hideAllScreens();
   if (gameScreenEl) gameScreenEl.classList.remove('hidden');
   
+  setupVariantRulesModal();
   generateNewPuzzle();
   renderBoard();
   startTimer();
@@ -819,6 +864,8 @@ function resumeSavedGame(saved) {
 
   hideAllScreens();
   if (gameScreenEl) gameScreenEl.classList.remove('hidden');
+
+  setupVariantRulesModal();
 
   requestAnimationFrame(() => {
     renderThermometersSVG();

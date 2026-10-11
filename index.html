@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/566/566295.png">
 
-  <link rel="stylesheet" href="style.css?v=23">
+  <link rel="stylesheet" href="style.css?v=24">
 </head>
 <body>
   <div class="app-container">
@@ -189,7 +189,7 @@
           <div id="pause-overlay" class="pause-overlay hidden">
             <div class="pause-card">
               <span>GAME PAUSED</span>
-              <button id="btn-rules-pause" class="btn">📜 View Variant Rules</button>
+              <button id="btn-rules-pause" class="btn hidden">📜 View Variant Rules</button>
               <button id="btn-resume" class="btn btn-primary">Resume ▶</button>
             </div>
           </div>
@@ -263,14 +263,12 @@
   <div id="rules-modal" class="modal-backdrop hidden">
     <div class="modal-card">
       <div class="modal-header">
-        <h2 id="rules-title">Thermometer Rules</h2>
+        <h2 id="rules-title">Variant Rules</h2>
         <button id="btn-close-rules" class="btn-close">✕</button>
       </div>
       <div class="modal-body">
         <div id="rules-body-content" class="rules-text">
-          <p><strong>Thermometer Constraint:</strong></p>
-          <p>Numbers along a thermometer must <strong>strictly increase</strong> moving from the circular bulb end toward the flat tip.</p>
-          <p><em>Example:</em> A 3-cell thermometer starting at a bulb could contain <strong>1 ➔ 4 ➔ 8</strong>, but not <strong>2 ➔ 2 ➔ 5</strong> or <strong>6 ➔ 3 ➔ 9</strong>.</p>
+          <!-- Dynamically populated per variant -->
         </div>
         <button id="btn-dismiss-rules" class="btn btn-primary" style="margin-top: 8px;">Got It!</button>
       </div>
