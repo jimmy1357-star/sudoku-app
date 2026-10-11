@@ -31,6 +31,7 @@ let activeColor = 'c-blue';
 let hintsRemaining = 5;
 let mistakesCount = 0;
 const maxMistakes = 3;
+let currentHintResult = null;
 
 // Settings State
 let settingsSound = true;
@@ -481,13 +482,217 @@ function closeSettings() {
 function openRules() { rulesModal.classList.remove('hidden'); }
 function closeRules() { rulesModal.classList.add('hidden'); }
 
+// --- SMART LOGICAL HINT ENGINE (MINI SUDOKU AI) ---
+function getCellCandidates(r, c) {
+  const candidates = [];
+  const used = new Set();
+
+  for (let i = 0; i < 9; i++) {
+    if (boardState[r][i] !== 0) used.add(boardState[r][i]);
+    if (boardState[i][c] !== 0) used.add(boardState[i][c]);
+  }
+
+  const boxStartR = Math.floor(r / 3) * 3;
+  const boxStartC = Math.floor(c / 3) * 3;
+  for (let br = 0; br < 3; br++) {
+    for (let bc = 0; bc < 3; bc++) {
+      const val = boardState[boxStartR + br][boxStartC + bc];
+      if (val !== 0) used.add(val);
+    }
+  }
+
+  if (selectedVariant === 'thermometer') {
+    for (const thermo of thermometers) {
+      for (let i = 0; i < thermo.length; i++) {
+        if (thermo[i].r === r && thermo[i].c === c) {
+          if (i > 0) {
+            const prevVal = boardState[thermo[i - 1].r][thermo[i - 1].c];
+            if (prevVal !== 0) {
+              for (let d = 1; d <= prevVal; d++) used.add(d);
+            }
+          }
+          if (i < thermo.length - 1) {
+            const nextVal = boardState[thermo[i + 1].r][thermo[i + 1].c];
+            if (nextVal !== 0) {
+              for (let d = nextVal; d <= 9; d++) used.add(d);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  for (let d = 1; d <= 9; d++) {
+    if (!used.has(d)) candidates.push(d);
+  }
+  return candidates;
+}
+
+function findSmartHint() {
+  // 1. Check for existing constraint violations first
+  for (let r = 0; r < 9; r++) {
+    for (let c = 0; c < 9; c++) {
+      if (boardState[r][c] !== 0 && !givensMask[r][c] && hasConflict(r, c)) {
+        return {
+          r, c, digit: boardState[r][c],
+          type: 'Conflict',
+          message: `<strong>Rule Conflict:</strong> The entry at Row ${r + 1}, Column ${c + 1} violates a Sudoku or variant constraint. Review this cell.`
+        };
+      }
+    }
+  }
+
+  // 2. Scan for Naked Singles
+  for (let r = 0; r < 9; r++) {
+    for (let c = 0; c < 9; c++) {
+      if (boardState[r][c] === 0 && !givensMask[r][c]) {
+        const candidates = getCellCandidates(r, c);
+        if (candidates.length === 1) {
+          const digit = candidates[0];
+          return {
+            r, c, digit,
+            type: 'Naked Single',
+            message: `<strong>Naked Single:</strong> Look at Row ${r + 1}, Column ${c + 1}. Its intersecting row, column, and 3x3 box eliminate all other possibilities. This cell <strong>must be ${digit}</strong>.`
+          };
+        }
+      }
+    }
+  }
+
+  // 3. Scan for Hidden Singles in Rows
+  for (let r = 0; r < 9; r++) {
+    for (let d = 1; d <= 9; d++) {
+      let alreadyPlaced = false;
+      for (let c = 0; c < 9; c++) {
+        if (boardState[r][c] === d) { alreadyPlaced = true; break; }
+      }
+      if (alreadyPlaced) continue;
+
+      let validCells = [];
+      for (let c = 0; c < 9; c++) {
+        if (boardState[r][c] === 0 && getCellCandidates(r, c).includes(d)) {
+          validCells.push({ r, c });
+        }
+      }
+      if (validCells.length === 1) {
+        const target = validCells[0];
+        return {
+          r: target.r, c: target.c, digit: d,
+          type: 'Hidden Single (Row)',
+          message: `<strong>Hidden Single:</strong> In Row ${r + 1}, the digit <strong>${d}</strong> can only legally fit into Column ${target.c + 1}. All other open cells in this row are blocked.`
+        };
+      }
+    }
+  }
+
+  // 4. Scan for Hidden Singles in Columns
+  for (let c = 0; c < 9; c++) {
+    for (let d = 1; d <= 9; d++) {
+      let alreadyPlaced = false;
+      for (let r = 0; r < 9; r++) {
+        if (boardState[r][c] === d) { alreadyPlaced = true; break; }
+      }
+      if (alreadyPlaced) continue;
+
+      let validCells = [];
+      for (let r = 0; r < 9; r++) {
+        if (boardState[r][c] === 0 && getCellCandidates(r, c).includes(d)) {
+          validCells.push({ r, c });
+        }
+      }
+      if (validCells.length === 1) {
+        const target = validCells[0];
+        return {
+          r: target.r, c: target.c, digit: d,
+          type: 'Hidden Single (Col)',
+          message: `<strong>Hidden Single:</strong> In Column ${c + 1}, the digit <strong>${d}</strong> has only one valid position remaining at Row ${target.r + 1}.`
+        };
+      }
+    }
+  }
+
+  // 5. Scan for Hidden Singles in 3x3 Boxes
+  for (let br = 0; br < 3; br++) {
+    for (let bc = 0; bc < 3; bc++) {
+      const boxStartR = br * 3;
+      const boxStartC = bc * 3;
+      for (let d = 1; d <= 9; d++) {
+        let alreadyPlaced = false;
+        for (let dr = 0; dr < 3; dr++) {
+          for (let dc = 0; dc < 3; dc++) {
+            if (boardState[boxStartR + dr][boxStartC + dc] === d) { alreadyPlaced = true; break; }
+          }
+          if (alreadyPlaced) break;
+        }
+        if (alreadyPlaced) continue;
+
+        let validCells = [];
+        for (let dr = 0; dr < 3; dr++) {
+          for (let dc = 0; dc < 3; dc++) {
+            const r = boxStartR + dr;
+            const c = boxStartC + dc;
+            if (boardState[r][c] === 0 && getCellCandidates(r, c).includes(d)) {
+              validCells.push({ r, c });
+            }
+          }
+        }
+        if (validCells.length === 1) {
+          const target = validCells[0];
+          const boxNum = br * 3 + bc + 1;
+          return {
+            r: target.r, c: target.c, digit: d,
+            type: 'Hidden Single (Box)',
+            message: `<strong>Hidden Single:</strong> In 3x3 Box ${boxNum}, the digit <strong>${d}</strong> can only fit at Row ${target.r + 1}, Column ${target.c + 1}.`
+          };
+        }
+      }
+    }
+  }
+
+  // 6. Thermometer Variant Check
+  if (selectedVariant === 'thermometer' && thermometers.length > 0) {
+    for (const thermo of thermometers) {
+      const bulb = thermo[0];
+      const maxBulbVal = 10 - thermo.length;
+      if (boardState[bulb.r][bulb.c] === 0) {
+        return {
+          r: bulb.r, c: bulb.c, digit: null,
+          type: 'Thermometer Bulb',
+          message: `<strong>Thermometer Constraint:</strong> Look at the thermometer bulb at Row ${bulb.r + 1}, Column ${bulb.c + 1}. Because this thermometer path spans ${thermo.length} cells, the bulb value cannot exceed <strong>${maxBulbVal}</strong>.`
+        };
+      }
+    }
+  }
+
+  // 7. Fallback
+  for (let r = 0; r < 9; r++) {
+    for (let c = 0; c < 9; c++) {
+      if (boardState[r][c] === 0 && !givensMask[r][c]) {
+        return {
+          r, c, digit: solutionMatrix[r][c],
+          type: 'Strategic Focus',
+          message: `<strong>Strategic Focus:</strong> Examine Row ${r + 1}, Column ${c + 1}. Review intersecting row, column, and box candidates to narrow down your next move.`
+        };
+      }
+    }
+  }
+
+  return null;
+}
+
 function openHintModal() {
   if (hintsRemaining <= 0) {
-    hintMessageEl.textContent = "You have no hints remaining for this game!";
+    hintMessageEl.innerHTML = "You have no hints remaining for this game!";
     confirmHintBtn.style.display = 'none';
   } else {
-    hintMessageEl.textContent = `Would you like a logical guide hint? You have [${hintsRemaining}] remaining.`;
+    currentHintResult = findSmartHint();
+    if (currentHintResult) {
+      hintMessageEl.innerHTML = `${currentHintResult.message}<br><br><span style="color: var(--text-muted); font-size: 0.85rem;">[${hintsRemaining} hints remaining]</span>`;
+    } else {
+      hintMessageEl.innerHTML = `No immediate logical deduction found, but keep scanning!<br><br><span style="color: var(--text-muted); font-size: 0.85rem;">[${hintsRemaining} hints remaining]</span>`;
+    }
     confirmHintBtn.style.display = 'block';
+    confirmHintBtn.textContent = "Highlight Cell & Apply Hint";
   }
   hintModal.classList.remove('hidden');
 }
@@ -499,44 +704,13 @@ function closeHintModal() {
 function triggerHint() {
   if (hintsRemaining <= 0) return;
   hintsRemaining--;
-  hintCountEl.textContent = hintsRemaining;
+  if (hintCountEl) hintCountEl.textContent = hintsRemaining;
   closeHintModal();
   saveGameToStorage();
 
-  for (let r = 0; r < 9; r++) {
-    for (let c = 0; c < 9; c++) {
-      if (boardState[r][c] !== 0 && !givensMask[r][c] && hasConflict(r, c)) {
-        selectedIdx = r * 9 + c;
-        renderBoard();
-        alert(`💡 Logical Guide: Cell at Row ${r + 1}, Col ${c + 1} violates a rule constraint.`);
-        return;
-      }
-    }
-  }
-
-  if (selectedVariant === 'thermometer' && thermometers.length > 0) {
-    const thermo = thermometers[Math.floor(Math.random() * thermometers.length)];
-    const bulb = thermo[0];
-    const maxPossibleAtBulb = 10 - thermo.length;
-
-    selectedIdx = bulb.r * 9 + bulb.c;
+  if (currentHintResult) {
+    selectedIdx = currentHintResult.r * 9 + currentHintResult.c;
     renderBoard();
-
-    if (boardState[bulb.r][bulb.c] === 0) {
-      alert(`💡 Logical Guide: Look at the thermometer bulb at Row ${bulb.r + 1}, Col ${bulb.c + 1}. Because this thermometer is ${thermo.length} cells long, the bulb cannot exceed ${maxPossibleAtBulb}.`);
-      return;
-    }
-  }
-
-  for (let r = 0; r < 9; r++) {
-    for (let c = 0; c < 9; c++) {
-      if (boardState[r][c] === 0 && !givensMask[r][c]) {
-        selectedIdx = r * 9 + c;
-        renderBoard();
-        alert(`💡 Logical Guide: Examine Row ${r + 1}, Col ${c + 1}. Check its 3x3 box and intersecting row/column candidates.`);
-        return;
-      }
-    }
   }
 }
 
@@ -745,7 +919,6 @@ function renderThermometersSVG() {
       else pathData += ` L ${x} ${y}`;
     });
 
-    // Thin stem path
     const stemPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     stemPath.setAttribute('d', pathData);
     stemPath.setAttribute('stroke', 'var(--thermo-stem)');
@@ -755,7 +928,6 @@ function renderThermometersSVG() {
     stemPath.setAttribute('stroke-linejoin', 'round');
     svgOverlayEl.appendChild(stemPath);
 
-    // Distinct bulb circle at the start of the thermometer
     const bulbPt = path[0];
     const bulbX = bulbPt.c * cellSize + cellSize / 2;
     const bulbY = bulbPt.r * cellSize + cellSize / 2;
