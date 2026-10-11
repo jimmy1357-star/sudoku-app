@@ -529,7 +529,6 @@ function getCellCandidates(r, c) {
 }
 
 function findSmartHint() {
-  // 1. Check for existing constraint violations first
   for (let r = 0; r < 9; r++) {
     for (let c = 0; c < 9; c++) {
       if (boardState[r][c] !== 0 && !givensMask[r][c] && hasConflict(r, c)) {
@@ -542,7 +541,6 @@ function findSmartHint() {
     }
   }
 
-  // 2. Scan for Naked Singles
   for (let r = 0; r < 9; r++) {
     for (let c = 0; c < 9; c++) {
       if (boardState[r][c] === 0 && !givensMask[r][c]) {
@@ -559,7 +557,6 @@ function findSmartHint() {
     }
   }
 
-  // 3. Scan for Hidden Singles in Rows
   for (let r = 0; r < 9; r++) {
     for (let d = 1; d <= 9; d++) {
       let alreadyPlaced = false;
@@ -585,7 +582,6 @@ function findSmartHint() {
     }
   }
 
-  // 4. Scan for Hidden Singles in Columns
   for (let c = 0; c < 9; c++) {
     for (let d = 1; d <= 9; d++) {
       let alreadyPlaced = false;
@@ -611,7 +607,6 @@ function findSmartHint() {
     }
   }
 
-  // 5. Scan for Hidden Singles in 3x3 Boxes
   for (let br = 0; br < 3; br++) {
     for (let bc = 0; bc < 3; bc++) {
       const boxStartR = br * 3;
@@ -649,7 +644,6 @@ function findSmartHint() {
     }
   }
 
-  // 6. Thermometer Variant Check
   if (selectedVariant === 'thermometer' && thermometers.length > 0) {
     for (const thermo of thermometers) {
       const bulb = thermo[0];
@@ -664,7 +658,6 @@ function findSmartHint() {
     }
   }
 
-  // 7. Fallback
   for (let r = 0; r < 9; r++) {
     for (let c = 0; c < 9; c++) {
       if (boardState[r][c] === 0 && !givensMask[r][c]) {
@@ -685,14 +678,10 @@ function openHintModal() {
     hintMessageEl.innerHTML = "You have no hints remaining for this game!";
     confirmHintBtn.style.display = 'none';
   } else {
-    currentHintResult = findSmartHint();
-    if (currentHintResult) {
-      hintMessageEl.innerHTML = `${currentHintResult.message}<br><br><span style="color: var(--text-muted); font-size: 0.85rem;">[${hintsRemaining} hints remaining]</span>`;
-    } else {
-      hintMessageEl.innerHTML = `No immediate logical deduction found, but keep scanning!<br><br><span style="color: var(--text-muted); font-size: 0.85rem;">[${hintsRemaining} hints remaining]</span>`;
-    }
+    // Step 1: Just show confirmation prompt. Do NOT calculate or deduct yet!
+    hintMessageEl.innerHTML = `Would you like a hint? You have [${hintsRemaining}] remaining.`;
     confirmHintBtn.style.display = 'block';
-    confirmHintBtn.textContent = "Highlight Cell & Apply Hint";
+    confirmHintBtn.textContent = "Get Direction";
   }
   hintModal.classList.remove('hidden');
 }
@@ -703,9 +692,19 @@ function closeHintModal() {
 
 function triggerHint() {
   if (hintsRemaining <= 0) return;
+
+  // Step 2: User confirmed. Now deduct hint, calculate smart hint, and display message.
   hintsRemaining--;
   if (hintCountEl) hintCountEl.textContent = hintsRemaining;
-  closeHintModal();
+  
+  currentHintResult = findSmartHint();
+  if (currentHintResult) {
+    hintMessageEl.innerHTML = `${currentHintResult.message}<br><br><span style="color: var(--text-muted); font-size: 0.85rem;">[${hintsRemaining} hints remaining]</span>`;
+  } else {
+    hintMessageEl.innerHTML = `No immediate logical deduction found, but keep scanning!<br><br><span style="color: var(--text-muted); font-size: 0.85rem;">[${hintsRemaining} hints remaining]</span>`;
+  }
+
+  confirmHintBtn.style.display = 'none'; // Hide button after revealing so closing just dismisses
   saveGameToStorage();
 
   if (currentHintResult) {
